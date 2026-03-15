@@ -76,7 +76,12 @@ export function renderWatermarkedImage({
 
   const fontSize = getFontSize(width, height, settings);
   const fontWeight = settings.bold ? '700' : '400';
-  const fontFamily = settings.fontFamily === 'Inter' ? '"Inter", "Segoe UI", sans-serif' : settings.fontFamily;
+  const fontFamily =
+    settings.fontFamily === 'Roboto'
+      ? '"Roboto", "Segoe UI", Arial, sans-serif'
+      : settings.fontFamily === 'Playwrite US Modern'
+        ? '"Playwrite US Modern", "Segoe Print", "Bradley Hand", cursive'
+        : settings.fontFamily;
   context.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
   context.textAlign = 'left';
   context.textBaseline = 'top';

@@ -7,13 +7,14 @@ export const FONT_OPTIONS = [
   'Verdana',
   'Trebuchet MS',
   'Courier New',
-  'Inter'
+  'Roboto',
+  'Playwrite US Modern'
 ] as const;
 
 export const DEFAULT_SETTINGS: WatermarkSettings = {
   text: '© Your Name',
   position: 'bottom-right',
-  fontFamily: 'Arial',
+  fontFamily: 'Roboto',
   color: '#ffffff',
   opacity: 0.75,
   size: 4,
