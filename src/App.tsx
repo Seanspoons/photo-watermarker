@@ -131,7 +131,7 @@ export default function App() {
 
   const imageSummary = useMemo(() => {
     if (!imageAsset) {
-      return 'Choose a photo to start. Everything stays on this device.';
+      return 'Choose a photo to get started.';
     }
 
     return `${imageAsset.name} • ${imageAsset.width} × ${imageAsset.height}px`;
@@ -140,7 +140,7 @@ export default function App() {
   const handleFileSelect = async (file: File) => {
     setIsBusy(true);
     setErrorMessage(null);
-    setStatusMessage('Loading image...');
+    setStatusMessage('Opening photo...');
 
     try {
       const nextAsset = await loadImageAsset(file);
@@ -152,7 +152,7 @@ export default function App() {
         return nextAsset;
       });
       setPreviewMode('after');
-      setStatusMessage(nextAsset.wasConverted ? 'HEIC converted locally and ready.' : 'Image ready.');
+      setStatusMessage('Photo ready.');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'The photo could not be loaded.');
       setStatusMessage(null);
@@ -171,13 +171,13 @@ export default function App() {
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
     setExportFormat('jpeg');
-    setStatusMessage('Watermark settings reset.');
+    setStatusMessage('Settings reset.');
   };
 
   const handleSavePreset = () => {
     const trimmedName = presetName.trim();
     if (!trimmedName) {
-      setErrorMessage('Add a preset name before saving.');
+      setErrorMessage('Add a name before saving this look.');
       return;
     }
 
@@ -191,7 +191,7 @@ export default function App() {
     setSavedPresets((current) => [...current, nextPreset]);
     setPresetName('');
     setErrorMessage(null);
-    setStatusMessage(`Saved preset "${trimmedName}".`);
+    setStatusMessage(`Saved "${trimmedName}".`);
   };
 
   const handleApplyPreset = (presetId: string) => {
@@ -203,7 +203,7 @@ export default function App() {
     setSettings(preset.settings);
     setExportFormat(preset.exportFormat);
     setErrorMessage(null);
-    setStatusMessage(`Applied preset "${preset.name}".`);
+    setStatusMessage(`Applied "${preset.name}".`);
   };
 
   const handleDeletePreset = (presetId: string) => {
@@ -214,18 +214,18 @@ export default function App() {
 
     setSavedPresets((current) => current.filter((entry) => entry.id !== presetId));
     setErrorMessage(null);
-    setStatusMessage(`Removed preset "${preset.name}".`);
+    setStatusMessage(`Removed "${preset.name}".`);
   };
 
   const runExport = async (format: ExportFormat, action: 'download' | 'share') => {
     if (!imageAsset || !exportCanvasRef.current) {
-      setErrorMessage('Upload a photo before exporting.');
+      setErrorMessage('Choose a photo before saving.');
       return;
     }
 
     setIsBusy(true);
     setErrorMessage(null);
-    setStatusMessage(action === 'share' ? 'Preparing share image...' : 'Preparing download...');
+    setStatusMessage(action === 'share' ? 'Getting your photo ready to share...' : 'Getting your photo ready...');
 
     try {
       renderWatermarkedImage({
@@ -243,7 +243,7 @@ export default function App() {
         const shared = await shareImageIfPossible(blob, filename);
         if (!shared) {
           triggerDownload(blob, filename);
-          setStatusMessage('Sharing is unavailable here, so the image was downloaded instead.');
+          setStatusMessage('Sharing is not available here, so your photo was downloaded instead.');
           return;
         }
 
@@ -252,7 +252,7 @@ export default function App() {
       }
 
       triggerDownload(blob, filename);
-      setStatusMessage(`Downloaded ${filename}.`);
+      setStatusMessage(`${filename} is ready.`);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'The image could not be exported.');
       setStatusMessage(null);
@@ -273,8 +273,8 @@ export default function App() {
               <p className="eyebrow">Photo Watermarker</p>
               <h1>Quick photo watermarking that feels simple.</h1>
               <p className="hero-copy">
-                Pick a photo, add your text, preview the result, and download the finished image in
-                a couple of taps.
+                Pick a photo, add your wording, preview the look, and save the finished image in
+                just a couple of taps.
               </p>
               <div className="hero-tags" aria-label="Supported image types">
                 <span className="hero-tag">JPEG</span>
@@ -286,11 +286,10 @@ export default function App() {
             </div>
           </div>
           <div className="hero-card">
-            <p className="hero-stat-label">Current image</p>
+            <p className="hero-stat-label">Selected photo</p>
             <p className="hero-stat">{imageSummary}</p>
             <p className="helper-text">
-              Your photo stays on this device. Save presets if you want a favorite setup ready for
-              next time.
+              Your photo stays on this device. Save a favorite look once and use it again anytime.
             </p>
           </div>
         </section>
@@ -310,7 +309,6 @@ export default function App() {
               hasImage={Boolean(imageAsset)}
               beforeAfterMode={previewMode}
               dimensions={imageAsset ? { width: imageAsset.width, height: imageAsset.height } : undefined}
-              wasConverted={imageAsset?.wasConverted}
             />
           </div>
 
@@ -347,7 +345,7 @@ export default function App() {
                   onClick={() => runExport('jpeg', 'download')}
                   disabled={!imageAsset || isBusy}
                 >
-                  Download JPEG
+                  Save JPEG
                 </button>
                 <button
                   type="button"
@@ -355,7 +353,7 @@ export default function App() {
                   onClick={() => runExport('png', 'download')}
                   disabled={!imageAsset || isBusy}
                 >
-                  Download PNG
+                  Save PNG
                 </button>
                 <button
                   type="button"
@@ -363,12 +361,12 @@ export default function App() {
                   onClick={() => runExport(exportFormat, 'share')}
                   disabled={!imageAsset || isBusy}
                 >
-                  Share on device
+                  Share
                 </button>
               </div>
 
               <p className="helper-text">
-                Export keeps the original pixel dimensions. JPEG uses high quality by default.
+                Saved photos keep the original image size.
               </p>
             </section>
           </div>

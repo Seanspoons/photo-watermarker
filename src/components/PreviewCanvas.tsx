@@ -5,15 +5,13 @@ interface PreviewCanvasProps {
   hasImage: boolean;
   beforeAfterMode: 'after' | 'before';
   dimensions?: { width: number; height: number };
-  wasConverted?: boolean;
 }
 
 export function PreviewCanvas({
   canvasRef,
   hasImage,
   beforeAfterMode,
-  dimensions,
-  wasConverted = false
+  dimensions
 }: PreviewCanvasProps) {
   return (
     <section className="panel preview-panel">
@@ -35,21 +33,15 @@ export function PreviewCanvas({
             ref={canvasRef}
             className="preview-canvas"
             aria-label={
-              beforeAfterMode === 'before'
-                ? 'Original photo preview'
-                : 'Watermarked photo preview'
+              beforeAfterMode === 'before' ? 'Original photo preview' : 'Updated photo preview'
             }
           />
         ) : (
           <div className="preview-placeholder">
-            <p>Your image preview will appear here after you choose a photo.</p>
+            <p>Your photo preview will appear here after you choose an image.</p>
           </div>
         )}
       </div>
-
-      {wasConverted ? (
-        <p className="helper-text">HEIC/HEIF image converted locally to JPEG before rendering.</p>
-      ) : null}
     </section>
   );
 }

@@ -51,29 +51,29 @@ export function WatermarkControls({
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Step 3</p>
-          <h2>Watermark settings</h2>
+          <h2>Make it your own</h2>
         </div>
         <button type="button" className="secondary-button" onClick={onReset} disabled={disabled}>
-          Reset defaults
+          Reset
         </button>
       </div>
 
       <div className="controls-grid">
         <div className="field field-full preset-panel">
-          <span>Quick presets</span>
+          <span>Saved looks</span>
           <div className="preset-save-row">
             <input
               type="text"
               value={presetName}
               onChange={(event) => onPresetNameChange(event.target.value)}
               disabled={disabled}
-              placeholder="Preset name"
+              placeholder="Name this look"
             />
             <button type="button" className="secondary-button" onClick={onSavePreset} disabled={disabled}>
-              Save preset
+              Save look
             </button>
           </div>
-          <div className="preset-list" aria-label="Saved presets">
+          <div className="preset-list" aria-label="Saved looks">
             {savedPresets.length > 0 ? (
               savedPresets.map((preset) => (
                 <div key={preset.id} className="preset-chip">
@@ -90,23 +90,23 @@ export function WatermarkControls({
                     className="preset-delete-button"
                     onClick={() => onDeletePreset(preset.id)}
                     disabled={disabled}
-                    aria-label={`Delete preset ${preset.name}`}
+                    aria-label={`Delete look ${preset.name}`}
                   >
                     Remove
                   </button>
                 </div>
               ))
             ) : (
-              <p className="helper-text">No saved presets yet.</p>
+              <p className="helper-text">No saved looks yet.</p>
             )}
           </div>
           <p className="helper-text">
-            Presets save the watermark text, style settings, position, and export format together.
+            Each saved look keeps your watermark text, style, position, and file type together.
           </p>
         </div>
 
         <label className="field field-full">
-          <span>Watermark Text</span>
+          <span>Watermark text</span>
           <input
             type="text"
             value={settings.text}
@@ -183,7 +183,7 @@ export function WatermarkControls({
         </label>
 
         <label className="field">
-          <span>Margin ({settings.margin}%)</span>
+          <span>Distance from edge ({settings.margin}%)</span>
           <input
             type="range"
             min="1"
@@ -196,7 +196,7 @@ export function WatermarkControls({
         </label>
 
         <label className="field">
-          <span>Export format</span>
+          <span>Save as</span>
           <select
             value={exportFormat}
             onChange={(event) => onExportFormatChange(event.target.value as ExportFormat)}
@@ -208,7 +208,7 @@ export function WatermarkControls({
         </label>
 
         <fieldset className="toggle-row field-full">
-          <legend>Options</legend>
+          <legend>Style</legend>
           <label className="check-field">
             <input
               type="checkbox"
@@ -216,7 +216,7 @@ export function WatermarkControls({
               onChange={(event) => onSettingChange('bold', event.target.checked)}
               disabled={disabled}
             />
-            <span>Bold text</span>
+            <span>Bold</span>
           </label>
           <label className="check-field">
             <input
@@ -234,12 +234,12 @@ export function WatermarkControls({
               onChange={(event) => onSettingChange('showBackground', event.target.checked)}
               disabled={disabled}
             />
-            <span>Background pill</span>
+            <span>Soft background</span>
           </label>
         </fieldset>
 
         <fieldset className="toggle-row field-full">
-          <legend>Preview mode</legend>
+          <legend>Compare</legend>
           <label className="check-field">
             <input
               type="radio"

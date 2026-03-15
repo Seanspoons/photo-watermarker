@@ -33,7 +33,7 @@ export function UploadPanel({ onFileSelect, disabled = false, fileName }: Upload
       <div className="panel-heading">
         <div>
           <p className="eyebrow">Step 1</p>
-          <h2>Upload photo</h2>
+          <h2>Choose your photo</h2>
         </div>
         {fileName ? <span className="file-badge">{fileName}</span> : null}
       </div>
@@ -56,9 +56,9 @@ export function UploadPanel({ onFileSelect, disabled = false, fileName }: Upload
           onChange={handleInputChange}
           disabled={disabled}
         />
-        <span className="upload-title">Upload Photo</span>
+        <span className="upload-title">Choose Photo</span>
         <span className="upload-copy">
-          Choose a JPEG, PNG, WebP, HEIC, or HEIF image. Drag and drop also works on desktop.
+          Pick a JPEG, PNG, WebP, HEIC, or HEIF image. You can also drag and drop on desktop.
         </span>
       </label>
     </section>
