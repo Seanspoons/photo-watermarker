@@ -1,4 +1,4 @@
-import { WatermarkSettings } from './types';
+import { SavedPreset, WatermarkSettings } from './types';
 
 export const FONT_OPTIONS = [
   'Arial',
@@ -8,20 +8,43 @@ export const FONT_OPTIONS = [
   'Trebuchet MS',
   'Courier New',
   'Roboto',
-  'Playwrite US Modern'
+  'Playwrite US Trad'
 ] as const;
 
 export const DEFAULT_SETTINGS: WatermarkSettings = {
   text: '© Your Name',
-  position: 'bottom-right',
+  position: 'top-right',
   fontFamily: 'Roboto',
   color: '#ffffff',
-  opacity: 0.75,
-  size: 4,
-  margin: 3,
-  bold: true,
-  shadow: true,
+  opacity: 1,
+  size: 6,
+  margin: 1.5,
+  bold: false,
+  shadow: false,
   showBackground: false
 };
 
 export const SETTINGS_STORAGE_KEY = 'photo-watermarker:settings';
+export const EXPORT_FORMAT_STORAGE_KEY = 'photo-watermarker:export-format';
+export const PRESETS_STORAGE_KEY = 'photo-watermarker:presets';
+
+export const STARTER_PRESETS: SavedPreset[] = [
+  {
+    id: 'starter-mom-white',
+    name: 'Mom White',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      color: '#ffffff'
+    },
+    exportFormat: 'jpeg'
+  },
+  {
+    id: 'starter-mom-black',
+    name: 'Mom Black',
+    settings: {
+      ...DEFAULT_SETTINGS,
+      color: '#000000'
+    },
+    exportFormat: 'jpeg'
+  }
+];

@@ -1,15 +1,21 @@
 import { ChangeEvent } from 'react';
 import { FONT_OPTIONS } from '../constants';
-import { ExportFormat, WatermarkSettings, WatermarkPosition } from '../types';
+import { ExportFormat, SavedPreset, WatermarkSettings, WatermarkPosition } from '../types';
 
 interface WatermarkControlsProps {
   settings: WatermarkSettings;
   exportFormat: ExportFormat;
   beforeAfterMode: 'after' | 'before';
+  presetName: string;
+  savedPresets: SavedPreset[];
   disabled?: boolean;
   onSettingChange: <K extends keyof WatermarkSettings>(key: K, value: WatermarkSettings[K]) => void;
   onExportFormatChange: (format: ExportFormat) => void;
   onBeforeAfterChange: (mode: 'after' | 'before') => void;
+  onPresetNameChange: (value: string) => void;
+  onSavePreset: () => void;
+  onApplyPreset: (presetId: string) => void;
+  onDeletePreset: (presetId: string) => void;
   onReset: () => void;
 }
 
@@ -28,10 +34,16 @@ export function WatermarkControls({
   settings,
   exportFormat,
   beforeAfterMode,
+  presetName,
+  savedPresets,
   disabled = false,
   onSettingChange,
   onExportFormatChange,
   onBeforeAfterChange,
+  onPresetNameChange,
+  onSavePreset,
+  onApplyPreset,
+  onDeletePreset,
   onReset
 }: WatermarkControlsProps) {
   return (
@@ -47,6 +59,51 @@ export function WatermarkControls({
       </div>
 
       <div className="controls-grid">
+        <div className="field field-full preset-panel">
+          <span>Quick presets</span>
+          <div className="preset-save-row">
+            <input
+              type="text"
+              value={presetName}
+              onChange={(event) => onPresetNameChange(event.target.value)}
+              disabled={disabled}
+              placeholder="Preset name"
+            />
+            <button type="button" className="secondary-button" onClick={onSavePreset} disabled={disabled}>
+              Save preset
+            </button>
+          </div>
+          <div className="preset-list" aria-label="Saved presets">
+            {savedPresets.map((preset) => (
+              <div key={preset.id} className="preset-chip">
+                <button
+                  type="button"
+                  className="ghost-button preset-apply-button"
+                  onClick={() => onApplyPreset(preset.id)}
+                  disabled={disabled}
+                >
+                  {preset.name}
+                </button>
+                {!preset.id.startsWith('starter-') ? (
+                  <button
+                    type="button"
+                    className="preset-delete-button"
+                    onClick={() => onDeletePreset(preset.id)}
+                    disabled={disabled}
+                    aria-label={`Delete preset ${preset.name}`}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+          <p className="helper-text">
+            Save a favorite once, then tap it next time. Starter presets cover the usual white and
+            black top-right JPEG setup.
+          </p>
+        </div>
+
         <label className="field field-full">
           <span>Watermark Text</span>
           <input

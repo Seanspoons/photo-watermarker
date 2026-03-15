@@ -45,6 +45,21 @@ npm run build
 
 The production bundle is written to `dist/`.
 
+## Deploy to GitHub Pages
+
+This repo now includes a GitHub Actions workflow at `.github/workflows/deploy-pages.yml` that builds and deploys the app on every push to `main`.
+
+### One-time GitHub Pages setup
+
+1. Push the repo to GitHub.
+2. In GitHub, open `Settings` > `Pages`.
+3. Set the source to `GitHub Actions`.
+4. Push to `main` again, or run the workflow manually.
+
+If you host the app at the default Pages URL for this repo, the included workflow already builds with the correct base path for `https://seanspoons.github.io/photo-watermarker/`.
+
+If you later use a custom domain, the site should be rebuilt with `VITE_BASE_PATH=/` instead of the repo subpath.
+
 ## How HEIC support works
 
 Most browsers do not decode HEIC or HEIF images natively. This app detects `.heic` and `.heif` files, or matching MIME types, and converts them client-side with `heic2any` before the normal preview and export pipeline runs. The converted image remains local to the browser session.
@@ -89,4 +104,5 @@ src/
 
 - Default JPEG export quality is high (`0.94`).
 - Export keeps the original pixel dimensions and does not resize the image.
-- Last-used watermark settings are saved in `localStorage`.
+- Last-used watermark settings and export format are saved in `localStorage`.
+- Custom presets are saved locally in the browser so repeat users can reuse the same setup quickly.

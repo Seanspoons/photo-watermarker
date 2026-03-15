@@ -266,6 +266,59 @@ select:disabled {
   padding: 0 14px;
 }
 
+.preset-panel {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.preset-save-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.preset-save-row input {
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: inherit;
+  padding: 0 14px;
+}
+
+.preset-list {
+  display: grid;
+  gap: 10px;
+}
+
+.preset-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #faf8f3;
+}
+
+.preset-apply-button {
+  min-height: 42px;
+  padding: 0 14px;
+  text-align: left;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.preset-delete-button {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--text-soft);
+  padding: 0 8px;
+  font-weight: 500;
+}
+
 .field input[type="color"] {
   padding: 6px;
 }
@@ -370,6 +423,10 @@ select:disabled {
 
 @media (max-width: 640px) {
   .controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .preset-save-row {
     grid-template-columns: 1fr;
   }
 

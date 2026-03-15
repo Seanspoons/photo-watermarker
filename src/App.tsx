@@ -2,11 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PreviewCanvas } from './components/PreviewCanvas';
 import { UploadPanel } from './components/UploadPanel';
 import { WatermarkControls } from './components/WatermarkControls';
-import { DEFAULT_SETTINGS, SETTINGS_STORAGE_KEY } from './constants';
+import {
+  DEFAULT_SETTINGS,
+  EXPORT_FORMAT_STORAGE_KEY,
+  PRESETS_STORAGE_KEY,
+  SETTINGS_STORAGE_KEY,
+  STARTER_PRESETS
+} from './constants';
 import { createDownloadFilename, exportCanvasToBlob, shareImageIfPossible, triggerDownload } from './utils/exportImage';
 import { loadImageAsset } from './utils/imageLoader';
 import { renderWatermarkedImage } from './utils/renderWatermark';
-import { ExportFormat, ImageAsset, WatermarkSettings } from './types';
+import { ExportFormat, ImageAsset, SavedPreset, WatermarkSettings } from './types';
 
 function loadStoredSettings(): WatermarkSettings {
   if (typeof window === 'undefined') {
@@ -35,10 +41,40 @@ function getPreviewSize(width: number, height: number): { width: number; height:
   };
 }
 
+function loadStoredExportFormat(): ExportFormat {
+  if (typeof window === 'undefined') {
+    return 'jpeg';
+  }
+
+  const raw = window.localStorage.getItem(EXPORT_FORMAT_STORAGE_KEY);
+  return raw === 'png' ? 'png' : 'jpeg';
+}
+
+function loadStoredPresets(): SavedPreset[] {
+  if (typeof window === 'undefined') {
+    return STARTER_PRESETS;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PRESETS_STORAGE_KEY);
+    if (!raw) {
+      return STARTER_PRESETS;
+    }
+
+    const parsed = JSON.parse(raw) as SavedPreset[];
+    const customPresets = parsed.filter((preset) => !preset.id.startsWith('starter-'));
+    return [...STARTER_PRESETS, ...customPresets];
+  } catch {
+    return STARTER_PRESETS;
+  }
+}
+
 export default function App() {
   const [imageAsset, setImageAsset] = useState<ImageAsset | null>(null);
   const [settings, setSettings] = useState<WatermarkSettings>(loadStoredSettings);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>('jpeg');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>(loadStoredExportFormat);
+  const [savedPresets, setSavedPresets] = useState<SavedPreset[]>(loadStoredPresets);
+  const [presetName, setPresetName] = useState('');
   const [previewMode, setPreviewMode] = useState<'after' | 'before'>('after');
   const [isBusy, setIsBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,6 +85,15 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   }, [settings]);
+
+  useEffect(() => {
+    window.localStorage.setItem(EXPORT_FORMAT_STORAGE_KEY, exportFormat);
+  }, [exportFormat]);
+
+  useEffect(() => {
+    const customPresets = savedPresets.filter((preset) => !preset.id.startsWith('starter-'));
+    window.localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(customPresets));
+  }, [savedPresets]);
 
   useEffect(() => {
     if (!imageAsset || !previewCanvasRef.current) {
@@ -128,7 +173,51 @@ export default function App() {
 
   const handleReset = () => {
     setSettings(DEFAULT_SETTINGS);
+    setExportFormat('jpeg');
     setStatusMessage('Watermark settings reset.');
+  };
+
+  const handleSavePreset = () => {
+    const trimmedName = presetName.trim();
+    if (!trimmedName) {
+      setErrorMessage('Add a preset name before saving.');
+      return;
+    }
+
+    const nextPreset: SavedPreset = {
+      id: `preset-${Date.now()}`,
+      name: trimmedName,
+      settings,
+      exportFormat
+    };
+
+    setSavedPresets((current) => [...current, nextPreset]);
+    setPresetName('');
+    setErrorMessage(null);
+    setStatusMessage(`Saved preset "${trimmedName}".`);
+  };
+
+  const handleApplyPreset = (presetId: string) => {
+    const preset = savedPresets.find((entry) => entry.id === presetId);
+    if (!preset) {
+      return;
+    }
+
+    setSettings(preset.settings);
+    setExportFormat(preset.exportFormat);
+    setErrorMessage(null);
+    setStatusMessage(`Applied preset "${preset.name}".`);
+  };
+
+  const handleDeletePreset = (presetId: string) => {
+    const preset = savedPresets.find((entry) => entry.id === presetId);
+    if (!preset || preset.id.startsWith('starter-')) {
+      return;
+    }
+
+    setSavedPresets((current) => current.filter((entry) => entry.id !== presetId));
+    setErrorMessage(null);
+    setStatusMessage(`Removed preset "${preset.name}".`);
   };
 
   const runExport = async (format: ExportFormat, action: 'download' | 'share') => {
@@ -221,10 +310,16 @@ export default function App() {
               settings={settings}
               exportFormat={exportFormat}
               beforeAfterMode={previewMode}
+              presetName={presetName}
+              savedPresets={savedPresets}
               disabled={isBusy}
               onSettingChange={handleSettingChange}
               onExportFormatChange={setExportFormat}
               onBeforeAfterChange={setPreviewMode}
+              onPresetNameChange={setPresetName}
+              onSavePreset={handleSavePreset}
+              onApplyPreset={handleApplyPreset}
+              onDeletePreset={handleDeletePreset}
               onReset={handleReset}
             />
 

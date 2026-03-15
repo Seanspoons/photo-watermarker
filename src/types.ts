@@ -19,6 +19,13 @@ export interface WatermarkSettings {
   showBackground: boolean;
 }
 
+export interface SavedPreset {
+  id: string;
+  name: string;
+  settings: WatermarkSettings;
+  exportFormat: ExportFormat;
+}
+
 export interface ImageAsset {
   file: File;
   objectUrl: string;
