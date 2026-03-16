@@ -5,13 +5,15 @@ interface CollagePreviewProps {
   hasImages: boolean;
   imageCount: number;
   canBuild: boolean;
+  helperText?: string;
 }
 
 export function CollagePreview({
   canvasRef,
   hasImages,
   imageCount,
-  canBuild
+  canBuild,
+  helperText
 }: CollagePreviewProps) {
   return (
     <section className="panel preview-panel">
@@ -29,7 +31,7 @@ export function CollagePreview({
             <canvas ref={canvasRef} className="preview-canvas" aria-label="Collage preview" />
           ) : (
             <div className="preview-placeholder">
-              <p>Add at least 2 photos to start your collage.</p>
+              <p>{helperText ?? 'Add at least 2 photos to start your collage.'}</p>
             </div>
           )
         ) : (
@@ -38,6 +40,8 @@ export function CollagePreview({
           </div>
         )}
       </div>
+
+      {helperText && canBuild ? <p className="helper-text">{helperText}</p> : null}
     </section>
   );
 }

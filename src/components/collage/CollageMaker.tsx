@@ -1,6 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CollageSettings, ImageAsset } from '../../types';
+import { createDownloadFilename, exportCanvasToBlob, triggerDownload } from '../../utils/exportImage';
 import { loadImageAsset } from '../../utils/imageLoader';
+import { getCollageOutputSize, renderUniformCollage } from '../../utils/collage/renderCollage';
 import { CollageControls } from './CollageControls';
 import { CollagePreview } from './CollagePreview';
 import { CollageUploadPanel } from './CollageUploadPanel';
@@ -25,7 +27,9 @@ export function CollageMaker() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const imagesRef = useRef<ImageAsset[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const exportCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const imageSummary = useMemo(() => {
     if (images.length === 0) {
@@ -34,6 +38,37 @@ export function CollageMaker() {
 
     return `${images.length} photos ready for your collage.`;
   }, [images.length]);
+
+  const canBuildUniformCollage = images.length >= 2 && settings.layoutMode === 'uniform';
+  const previewHelperText =
+    settings.layoutMode === 'featured'
+      ? 'Featured layouts are coming next. Switch to Uniform Grid for a live collage now.'
+      : 'Uniform Grid is ready. Featured layouts land in the next step.';
+
+  useEffect(() => {
+    if (!canBuildUniformCollage || !previewCanvasRef.current) {
+      return;
+    }
+
+    const outputSize = getCollageOutputSize(settings);
+    const maxPreviewWidth = 960;
+    const scale = Math.min(maxPreviewWidth / outputSize.width, 1);
+
+    renderUniformCollage(previewCanvasRef.current, images, settings, {
+      width: Math.round(outputSize.width * scale),
+      height: Math.round(outputSize.height * scale)
+    });
+  }, [canBuildUniformCollage, images, settings]);
+
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  useEffect(() => {
+    return () => {
+      imagesRef.current.forEach((image) => URL.revokeObjectURL(image.objectUrl));
+    };
+  }, []);
 
   const handleFilesSelect = async (selectedFiles: FileList | File[]) => {
     const nextFiles = Array.from(selectedFiles);
@@ -78,6 +113,29 @@ export function CollageMaker() {
     setStatusMessage('Collage settings reset.');
   };
 
+  const handleExport = async (format: 'jpeg' | 'png') => {
+    if (!canBuildUniformCollage || !exportCanvasRef.current) {
+      setErrorMessage('Switch to Uniform Grid and add at least 2 photos before saving.');
+      return;
+    }
+
+    setIsBusy(true);
+    setErrorMessage(null);
+    setStatusMessage('Getting your collage ready...');
+
+    try {
+      renderUniformCollage(exportCanvasRef.current, images, settings);
+      const blob = await exportCanvasToBlob(exportCanvasRef.current, format, 0.94);
+      triggerDownload(blob, createDownloadFilename('collage', format));
+      setStatusMessage(`collage.${format === 'jpeg' ? 'jpg' : 'png'} is ready.`);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'The collage could not be exported.');
+      setStatusMessage(null);
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   return (
     <>
       <section className="hero">
@@ -114,7 +172,8 @@ export function CollageMaker() {
             canvasRef={previewCanvasRef}
             hasImages={images.length > 0}
             imageCount={images.length}
-            canBuild={images.length >= 2}
+            canBuild={canBuildUniformCollage}
+            helperText={previewHelperText}
           />
         </div>
 
@@ -155,19 +214,31 @@ export function CollageMaker() {
               </div>
             </div>
             <div className="export-actions">
-              <button type="button" className="primary-button" disabled>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => handleExport('jpeg')}
+                disabled={!canBuildUniformCollage || isBusy}
+              >
                 Save JPEG
               </button>
-              <button type="button" className="secondary-button" disabled>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => handleExport('png')}
+                disabled={!canBuildUniformCollage || isBusy}
+              >
                 Save PNG
               </button>
             </div>
             <p className="helper-text">
-              Export will be enabled once the collage renderer is in place.
+              Uniform Grid exports at the full preset size. Featured layout export lands next.
             </p>
           </section>
         </div>
       </section>
+
+      <canvas ref={exportCanvasRef} className="sr-only" aria-hidden="true" />
     </>
   );
 }
