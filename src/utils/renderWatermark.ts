@@ -24,7 +24,7 @@ function getMargin(width: number, height: number, settings: WatermarkSettings): 
 
 function getProofGap(width: number, height: number, settings: WatermarkSettings): number {
   const shorterEdge = Math.min(width, height);
-  return Math.round((shorterEdge * settings.proofGap) / 100);
+  return Math.round((shorterEdge * settings.proofGap) / 300);
 }
 
 function getProofAngle(angle: WatermarkProofAngle): number {
@@ -269,8 +269,10 @@ function drawProofTextWatermark(
     applyShadow(context, fontSize);
   }
 
+  let row = 0;
   for (let y = -diagonal; y <= diagonal; y += stepY) {
-    for (let x = -diagonal; x <= diagonal; x += stepX) {
+    const offsetX = row % 2 === 0 ? 0 : stepX / 2;
+    for (let x = -diagonal + offsetX; x <= diagonal + offsetX; x += stepX) {
       const boxX = x - textWidth / 2;
       const boxY = y - textHeight / 2;
 
@@ -293,6 +295,7 @@ function drawProofTextWatermark(
       context.fillStyle = settings.color;
       context.fillText(text, boxX + left, boxY + ascent);
     }
+    row += 1;
   }
 
   context.restore();
@@ -325,8 +328,10 @@ function drawProofImageWatermark(
     applyShadow(context, Math.max(imageSize.width, imageSize.height));
   }
 
+  let row = 0;
   for (let y = -diagonal; y <= diagonal; y += stepY) {
-    for (let x = -diagonal; x <= diagonal; x += stepX) {
+    const offsetX = row % 2 === 0 ? 0 : stepX / 2;
+    for (let x = -diagonal + offsetX; x <= diagonal + offsetX; x += stepX) {
       context.drawImage(
         watermarkImage,
         x - imageSize.width / 2,
@@ -335,6 +340,7 @@ function drawProofImageWatermark(
         imageSize.height
       );
     }
+    row += 1;
   }
 
   context.restore();

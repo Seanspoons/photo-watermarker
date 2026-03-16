@@ -27,16 +27,16 @@ interface WatermarkControlsProps {
   onReset: () => void;
 }
 
-const POSITION_OPTIONS: Array<{ label: string; value: WatermarkPosition; iconClass: string }> = [
-  { label: 'Top left', value: 'top-left', iconClass: 'is-up-left' },
-  { label: 'Top center', value: 'top-center', iconClass: 'is-up' },
-  { label: 'Top right', value: 'top-right', iconClass: 'is-up-right' },
-  { label: 'Center left', value: 'center-left', iconClass: 'is-left' },
-  { label: 'Center', value: 'center', iconClass: 'is-center' },
-  { label: 'Center right', value: 'center-right', iconClass: 'is-right' },
-  { label: 'Bottom left', value: 'bottom-left', iconClass: 'is-down-left' },
-  { label: 'Bottom center', value: 'bottom-center', iconClass: 'is-down' },
-  { label: 'Bottom right', value: 'bottom-right', iconClass: 'is-down-right' }
+const POSITION_OPTIONS: Array<{ label: string; value: WatermarkPosition; icon: string }> = [
+  { label: 'Top left', value: 'top-left', icon: '↖' },
+  { label: 'Top center', value: 'top-center', icon: '↑' },
+  { label: 'Top right', value: 'top-right', icon: '↗' },
+  { label: 'Center left', value: 'center-left', icon: '←' },
+  { label: 'Center', value: 'center', icon: '•' },
+  { label: 'Center right', value: 'center-right', icon: '→' },
+  { label: 'Bottom left', value: 'bottom-left', icon: '↙' },
+  { label: 'Bottom center', value: 'bottom-center', icon: '↓' },
+  { label: 'Bottom right', value: 'bottom-right', icon: '↘' }
 ];
 
 const LAYOUT_OPTIONS: Array<{ label: string; value: WatermarkLayout; description: string }> = [
@@ -323,7 +323,9 @@ export function WatermarkControls({
                     disabled={disabled}
                     aria-pressed={settings.position === option.value}
                   >
-                    <span className={`position-button-icon ${option.iconClass}`} aria-hidden="true" />
+                    <span className="position-button-icon" aria-hidden="true">
+                      {option.icon}
+                    </span>
                     <span className="sr-only">{option.label}</span>
                   </button>
                 ))}
@@ -351,8 +353,8 @@ export function WatermarkControls({
               <span>Pattern spacing ({settings.proofGap}%)</span>
               <input
                 type="range"
-                min="8"
-                max="32"
+                min="4"
+                max="18"
                 step="1"
                 value={settings.proofGap}
                 onChange={(event) => onSettingChange('proofGap', parseRangeValue(event))}
