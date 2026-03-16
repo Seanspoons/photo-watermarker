@@ -1,5 +1,37 @@
 import { CollageSavedPreset, CollageSettings } from '../../types';
 
+const SIZE_OPTIONS: Array<{
+  value: CollageSettings['sizePreset'];
+  label: string;
+  description: string;
+  previewClassName: string;
+}> = [
+  {
+    value: 'instagram-square',
+    label: 'Square',
+    description: '1080 × 1080',
+    previewClassName: 'output-preview-square'
+  },
+  {
+    value: 'instagram-portrait',
+    label: 'Portrait',
+    description: '1080 × 1350',
+    previewClassName: 'output-preview-portrait'
+  },
+  {
+    value: 'story',
+    label: 'Story',
+    description: '1080 × 1920',
+    previewClassName: 'output-preview-story'
+  },
+  {
+    value: 'high-res-square',
+    label: 'High Res',
+    description: '2160 × 2160',
+    previewClassName: 'output-preview-square'
+  }
+];
+
 interface CollageControlsProps {
   settings: CollageSettings;
   presetName: string;
@@ -108,19 +140,28 @@ export function CollageControls({
           </div>
         ) : null}
 
-        <label className="field">
-          <span>Size</span>
-          <select
-            value={settings.sizePreset}
-            onChange={(event) => onChange('sizePreset', event.target.value as CollageSettings['sizePreset'])}
-            disabled={disabled}
-          >
-            <option value="instagram-square">Instagram Square</option>
-            <option value="instagram-portrait">Instagram Portrait</option>
-            <option value="story">Story / Vertical</option>
-            <option value="high-res-square">High Res Square</option>
-          </select>
-        </label>
+        <fieldset className="field field-full layout-choice-group">
+          <legend>Output size</legend>
+          <div className="output-choice-grid">
+            {SIZE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`output-choice-card ${
+                  settings.sizePreset === option.value ? 'is-active' : ''
+                }`}
+                onClick={() => onChange('sizePreset', option.value)}
+                disabled={disabled}
+              >
+                <span className={`output-preview ${option.previewClassName}`} aria-hidden="true" />
+                <span className="choice-card-copy">
+                  <strong>{option.label}</strong>
+                  <span>{option.description}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
 
         <label className="field">
           <span>Columns ({settings.columns})</span>

@@ -437,6 +437,57 @@ select:disabled {
   border: 0;
 }
 
+.output-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.output-choice-card {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 88px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--accent);
+  text-align: left;
+}
+
+.output-choice-card.is-active {
+  border-color: var(--accent);
+  background: #f6f1e6;
+}
+
+.output-preview {
+  display: block;
+  justify-self: center;
+  align-self: center;
+  border-radius: 12px;
+  border: 2px solid #d1d8cf;
+  background:
+    linear-gradient(180deg, rgba(217, 162, 77, 0.35) 0 36%, transparent 36% 100%),
+    #f8f4ec;
+}
+
+.output-preview-square {
+  width: 56px;
+  height: 56px;
+}
+
+.output-preview-portrait {
+  width: 46px;
+  height: 58px;
+}
+
+.output-preview-story {
+  width: 34px;
+  height: 62px;
+}
+
 .choice-cards {
   display: grid;
   gap: 10px;
@@ -821,6 +872,10 @@ select:disabled {
 
 @media (max-width: 640px) {
   .controls-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .output-choice-grid {
     grid-template-columns: 1fr;
   }
 
