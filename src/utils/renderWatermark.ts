@@ -257,20 +257,20 @@ function drawProofTextWatermark(
   const gap = getProofGap(canvasWidth, canvasHeight, settings);
   const stepX = textWidth + gap;
   const stepY = textHeight + gap;
-  const diagonal = Math.ceil(Math.hypot(canvasWidth, canvasHeight));
-
-  context.save();
-  context.translate(canvasWidth / 2, canvasHeight / 2);
-  context.rotate(getProofAngle(settings.proofAngle));
-
-  if (settings.shadow) {
-    applyShadow(context, fontSize);
-  }
-
+  const extra = Math.ceil(Math.hypot(canvasWidth, canvasHeight) * 0.35);
+  const angle = getProofAngle(settings.proofAngle);
   let row = 0;
-  for (let y = -diagonal; y <= diagonal; y += stepY) {
+  for (let y = -extra; y <= canvasHeight + extra; y += stepY) {
     const offsetX = row % 2 === 0 ? 0 : stepX / 2;
-    for (let x = -diagonal + offsetX; x <= diagonal + offsetX; x += stepX) {
+    for (let x = -extra + offsetX; x <= canvasWidth + extra; x += stepX) {
+      context.save();
+      context.translate(x, y);
+      context.rotate(angle);
+
+      if (settings.shadow) {
+        applyShadow(context, fontSize);
+      }
+
       if (settings.showBackground) {
         const paddingX = Math.round(fontSize * 0.35);
         const paddingY = Math.round(fontSize * 0.2);
@@ -278,8 +278,8 @@ function drawProofTextWatermark(
         context.fillStyle = 'rgba(0, 0, 0, 0.28)';
         context.beginPath();
         context.roundRect(
-          x - textWidth / 2 - paddingX,
-          y - textHeight / 2 - paddingY,
+          -textWidth / 2 - paddingX,
+          -textHeight / 2 - paddingY,
           textWidth + paddingX * 2,
           textHeight + paddingY * 2,
           radius
@@ -290,12 +290,11 @@ function drawProofTextWatermark(
       context.fillStyle = settings.color;
       context.textAlign = 'center';
       context.textBaseline = 'middle';
-      context.fillText(text, x, y);
+      context.fillText(text, 0, 0);
+      context.restore();
     }
     row += 1;
   }
-
-  context.restore();
 }
 
 function drawProofImageWatermark(
