@@ -300,26 +300,30 @@ function drawProofTextWatermark(
   const stamp = createTextStampCanvas(settings, text, fontSize);
   const gap = getProofGap(canvasWidth, canvasHeight, settings);
   const stepX = stamp.width + gap;
-  const stepY = stamp.height + gap;
-  const extra = Math.ceil(Math.hypot(canvasWidth, canvasHeight) * 0.35);
+  const stepY = stamp.height + Math.round(gap * 0.85);
+  const diagonal = Math.ceil(Math.hypot(canvasWidth, canvasHeight));
   const angle = getProofAngle(settings.proofAngle);
-  let row = 0;
-  for (let y = -extra; y <= canvasHeight + extra; y += stepY) {
-    const offsetX = row % 2 === 0 ? 0 : stepX / 2;
-    for (let x = -extra + offsetX; x <= canvasWidth + extra; x += stepX) {
-      context.save();
-      context.translate(x, y);
-      context.rotate(angle);
+  context.save();
+  context.translate(canvasWidth / 2, canvasHeight / 2);
+  context.rotate(angle);
 
-      if (settings.shadow) {
-        applyShadow(context, Math.max(stamp.width, stamp.height));
-      }
-
-      context.drawImage(stamp.canvas, -stamp.width / 2, -stamp.height / 2, stamp.width, stamp.height);
-      context.restore();
-    }
-    row += 1;
+  if (settings.shadow) {
+    applyShadow(context, Math.max(stamp.width, stamp.height));
   }
+
+  for (let y = -diagonal; y <= diagonal; y += stepY) {
+    for (let x = -diagonal; x <= diagonal; x += stepX) {
+      context.drawImage(
+        stamp.canvas,
+        x - stamp.width / 2,
+        y - stamp.height / 2,
+        stamp.width,
+        stamp.height
+      );
+    }
+  }
+
+  context.restore();
 }
 
 function drawProofImageWatermark(
@@ -338,7 +342,7 @@ function drawProofImageWatermark(
   );
   const gap = getProofGap(canvasWidth, canvasHeight, settings);
   const stepX = imageSize.width + gap;
-  const stepY = imageSize.height + gap;
+  const stepY = imageSize.height + Math.round(gap * 0.85);
   const diagonal = Math.ceil(Math.hypot(canvasWidth, canvasHeight));
 
   context.save();
@@ -349,10 +353,8 @@ function drawProofImageWatermark(
     applyShadow(context, Math.max(imageSize.width, imageSize.height));
   }
 
-  let row = 0;
   for (let y = -diagonal; y <= diagonal; y += stepY) {
-    const offsetX = row % 2 === 0 ? 0 : stepX / 2;
-    for (let x = -diagonal + offsetX; x <= diagonal + offsetX; x += stepX) {
+    for (let x = -diagonal; x <= diagonal; x += stepX) {
       context.drawImage(
         watermarkImage,
         x - imageSize.width / 2,
@@ -361,7 +363,6 @@ function drawProofImageWatermark(
         imageSize.height
       );
     }
-    row += 1;
   }
 
   context.restore();
