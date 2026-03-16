@@ -60,6 +60,7 @@ export function CollageMaker() {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const imagesRef = useRef<ImageAsset[]>([]);
@@ -149,6 +150,16 @@ export function CollageMaker() {
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
+
+  useEffect(() => {
+    setSelectedImageIndex((current) => {
+      if (images.length === 0) {
+        return 0;
+      }
+
+      return Math.min(current, images.length - 1);
+    });
+  }, [images.length]);
 
   useEffect(() => {
     if (!hasLoadedDraft) {
@@ -272,6 +283,7 @@ export function CollageMaker() {
 
       return nextImages;
     });
+    setSelectedImageIndex((current) => Math.max(0, Math.min(current, images.length - 2)));
     setStatusMessage('Photo removed.');
   };
 
@@ -307,6 +319,7 @@ export function CollageMaker() {
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
     setDropTargetIndex(index);
+    setSelectedImageIndex(index);
   };
 
   const handleDragEnter = (index: number) => {
@@ -329,6 +342,7 @@ export function CollageMaker() {
     }
 
     reorderImages(draggedIndex, index);
+    setSelectedImageIndex(index);
     setStatusMessage('Photo order updated.');
     handleDragEnd();
   };
@@ -433,65 +447,77 @@ export function CollageMaker() {
               your main photo.
             </p>
             {images.length > 0 ? (
-              <div className="thumb-list">
-                {images.map((image, index) => (
-                  <div
-                    key={image.objectUrl}
-                    className={`thumb-card ${draggedIndex === index ? 'is-dragging' : ''} ${
-                      dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''
-                    }`}
-                    draggable={!isBusy}
-                    onDragStart={() => handleDragStart(index)}
-                    onDragEnter={() => handleDragEnter(index)}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => handleDrop(index)}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <img src={image.objectUrl} alt={image.name} className="thumb-image" />
-                    <div className="thumb-meta">
-                      <span className="thumb-order">
-                        {index === 0 ? 'Main photo' : `Photo ${index + 1}`}
-                      </span>
-                      <span className="thumb-drag-hint">Drag to reorder</span>
-                    </div>
-                    <p className="thumb-label">{image.name}</p>
-                    <div className="thumb-actions">
-                      <button
-                        type="button"
-                        className="thumb-action-button"
-                        onClick={() => handleMoveImage(index, -1)}
-                        disabled={index === 0 || isBusy}
-                      >
-                        Move Left
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-action-button"
-                        onClick={() => handleMoveImage(index, 1)}
-                        disabled={index === images.length - 1 || isBusy}
-                      >
-                        Move Right
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-action-button"
-                        onClick={() => handleSetFeatured(index)}
-                        disabled={index === 0 || isBusy}
-                      >
-                        Make Main
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-action-button is-danger"
-                        onClick={() => handleRemoveImage(index)}
-                        disabled={isBusy}
-                      >
-                        Remove
-                      </button>
-                    </div>
+              <>
+                <div className="thumb-list" role="list" aria-label="Collage photos">
+                  {images.map((image, index) => (
+                    <button
+                      key={image.objectUrl}
+                      type="button"
+                      className={`thumb-card ${selectedImageIndex === index ? 'is-selected' : ''} ${
+                        draggedIndex === index ? 'is-dragging' : ''
+                      } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''}`}
+                      draggable={!isBusy}
+                      onClick={() => setSelectedImageIndex(index)}
+                      onDragStart={() => handleDragStart(index)}
+                      onDragEnter={() => handleDragEnter(index)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => handleDrop(index)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <img src={image.objectUrl} alt={image.name} className="thumb-image" />
+                      <div className="thumb-meta">
+                        <span className="thumb-order">
+                          {index === 0 ? 'Main photo' : `Photo ${index + 1}`}
+                        </span>
+                        <span className="thumb-drag-hint">Drag to reorder</span>
+                      </div>
+                      <p className="thumb-label">{image.name}</p>
+                    </button>
+                  ))}
+                </div>
+                <div className="arrange-panel" aria-live="polite">
+                  <div>
+                    <p className="eyebrow">Selected photo</p>
+                    <p className="arrange-title">
+                      {images[selectedImageIndex]?.name ?? 'Choose a photo'}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <div className="arrange-actions">
+                    <button
+                      type="button"
+                      className="thumb-action-button"
+                      onClick={() => handleMoveImage(selectedImageIndex, -1)}
+                      disabled={selectedImageIndex === 0 || isBusy}
+                    >
+                      Move Left
+                    </button>
+                    <button
+                      type="button"
+                      className="thumb-action-button"
+                      onClick={() => handleMoveImage(selectedImageIndex, 1)}
+                      disabled={selectedImageIndex === images.length - 1 || isBusy}
+                    >
+                      Move Right
+                    </button>
+                    <button
+                      type="button"
+                      className="thumb-action-button"
+                      onClick={() => handleSetFeatured(selectedImageIndex)}
+                      disabled={selectedImageIndex === 0 || isBusy}
+                    >
+                      Make Main
+                    </button>
+                    <button
+                      type="button"
+                      className="thumb-action-button is-danger"
+                      onClick={() => handleRemoveImage(selectedImageIndex)}
+                      disabled={isBusy}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
               <p className="helper-text">Add a few photos and they will appear here.</p>
             )}
