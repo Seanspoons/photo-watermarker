@@ -318,6 +318,35 @@ select:disabled {
   color: var(--text-soft);
 }
 
+.thumb-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.thumb-card {
+  display: grid;
+  gap: 8px;
+}
+
+.thumb-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #f4f1ea;
+}
+
+.thumb-label {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .controls-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
