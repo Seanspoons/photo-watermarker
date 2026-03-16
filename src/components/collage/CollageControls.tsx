@@ -36,6 +36,7 @@ interface CollageControlsProps {
   settings: CollageSettings;
   presetName: string;
   savedPresets: CollageSavedPreset[];
+  usesBalancedLayout: boolean;
   layoutWarning: string | null;
   warningActions: Array<{ label: string; onClick: () => void }>;
   disabled?: boolean;
@@ -52,6 +53,7 @@ export function CollageControls({
   settings,
   presetName,
   savedPresets,
+  usesBalancedLayout,
   layoutWarning,
   warningActions,
   disabled = false,
@@ -130,10 +132,15 @@ export function CollageControls({
         <div className="field field-full collage-summary">
           <span>Quick summary</span>
           <p className="helper-text">
-            {settings.columns} columns, {settings.gap}px spacing, {settings.fitMode === 'cover' ? 'filled tiles' : 'full photos'}
-            , and{' '}
+            {usesBalancedLayout
+              ? 'A balanced layout'
+              : `${settings.columns} columns with ${settings.gap}px spacing`}{' '}
+            keeps {settings.fitMode === 'cover' ? 'photos filled edge to edge' : 'full photos visible'}
+            , with{' '}
             {settings.featuredSpan === '1x1'
-              ? 'all photos the same size.'
+              ? usesBalancedLayout
+                ? 'more natural shapes for smaller photo sets.'
+                : 'all photos the same size.'
               : settings.featuredSpan === '2x2'
                 ? 'one large 2x2 main photo.'
                 : settings.featuredSpan === '2x1'
@@ -187,18 +194,27 @@ export function CollageControls({
           </div>
         </fieldset>
 
-        <label className="field">
-          <span>Columns ({settings.columns})</span>
-          <input
-            type="range"
-            min="2"
-            max="5"
-            step="1"
-            value={settings.columns}
-            onChange={(event) => onChange('columns', Number(event.target.value))}
-            disabled={disabled}
-          />
-        </label>
+        {usesBalancedLayout ? (
+          <div className="field">
+            <span>Layout</span>
+            <p className="helper-text">
+              For 2 to 4 photos, the app uses a balanced layout automatically.
+            </p>
+          </div>
+        ) : (
+          <label className="field">
+            <span>Columns ({settings.columns})</span>
+            <input
+              type="range"
+              min="2"
+              max="5"
+              step="1"
+              value={settings.columns}
+              onChange={(event) => onChange('columns', Number(event.target.value))}
+              disabled={disabled}
+            />
+          </label>
+        )}
 
         <label className="field">
           <span>Spacing ({settings.gap}px)</span>

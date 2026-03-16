@@ -63,7 +63,7 @@ export function CollageUploadPanel({
         />
         <span className="upload-title">Add Photos</span>
         <span className="upload-copy">
-          Choose between 2 and 20 photos. You can mix portrait, landscape, and square images.
+          Add 2 to 20 photos. Portrait, landscape, and square images all work.
         </span>
       </label>
     </section>

@@ -170,6 +170,8 @@ export function CollageMaker() {
       }),
     [images, previewCells, settings.fitMode]
   );
+  const usesBalancedLayout =
+    settings.featuredSpan === '1x1' && images.length >= 2 && images.length <= 4;
   const layoutMetrics = useMemo(
     () => getCollageLayoutMetrics(images.length, settings),
     [images.length, settings]
@@ -229,7 +231,9 @@ export function CollageMaker() {
   }, [canBuildCollage, layoutMetrics, settings.featuredSpan, settings.sizePreset]);
   const previewHelperText =
     settings.featuredSpan === '1x1'
-      ? 'Square grid mode keeps all tiles the same size.'
+      ? usesBalancedLayout
+        ? 'Smaller photo sets use a balanced collage layout automatically.'
+        : 'Equal tiles keep every photo the same size.'
       : 'The first photo becomes the main photo. Use “Use as Main Photo” below to switch it.';
 
   useEffect(() => {
@@ -600,7 +604,8 @@ export function CollageMaker() {
           <p className="hero-stat-label">Your collage</p>
           <p className="hero-stat">{imageSummary}</p>
           <p className="helper-text">
-            Start with 2 to 20 photos. Build a square grid, or make the first photo larger than the rest.
+            Add 2 to 20 photos. Smaller sets get a balanced layout automatically, and larger sets
+            can use equal tiles or a larger main photo.
           </p>
         </div>
       </section>
@@ -642,6 +647,7 @@ export function CollageMaker() {
             settings={settings}
             presetName={presetName}
             savedPresets={savedPresets}
+            usesBalancedLayout={usesBalancedLayout}
             layoutWarning={layoutAdvice.message}
             warningActions={layoutAdvice.actions.map((action) => ({
               label: action.label,
@@ -668,8 +674,8 @@ export function CollageMaker() {
               </div>
             </div>
             <p className="helper-text panel-description">
-              On desktop, drag photos right in the preview. On mobile, use the move buttons below.
-              The first photo is your main photo.
+              On desktop, drag photos right in the preview. On mobile, use the buttons below.
+              When you choose a larger layout, the first photo becomes the main photo.
             </p>
             {images.length > 0 ? (
               <>

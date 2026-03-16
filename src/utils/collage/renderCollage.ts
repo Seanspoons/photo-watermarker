@@ -198,6 +198,141 @@ function getSquareGridCells(
   };
 }
 
+function getBalancedSmallCountCells(
+  imageCount: number,
+  outputSize: CanvasSize,
+  settings: CollageSettings
+): { cells: CollageLayoutCell[]; metrics: CollageLayoutMetrics } | null {
+  if (settings.featuredSpan !== '1x1' || imageCount < 2 || imageCount > 4) {
+    return null;
+  }
+
+  const gap = settings.gap;
+  const { width, height } = outputSize;
+
+  if (imageCount === 2) {
+    if (width >= height) {
+      const cellWidth = (width - gap) / 2;
+      return {
+        cells: [
+          { x: 0, y: 0, width: cellWidth, height },
+          { x: cellWidth + gap, y: 0, width: cellWidth, height }
+        ],
+        metrics: {
+          outputWidth: width,
+          outputHeight: height,
+          columns: 2,
+          rows: 1,
+          cellSize: Math.min(cellWidth, height),
+          gridWidth: width,
+          gridHeight: height
+        }
+      };
+    }
+
+    const cellHeight = (height - gap) / 2;
+    return {
+      cells: [
+        { x: 0, y: 0, width, height: cellHeight },
+        { x: 0, y: cellHeight + gap, width, height: cellHeight }
+      ],
+      metrics: {
+        outputWidth: width,
+        outputHeight: height,
+        columns: 1,
+        rows: 2,
+        cellSize: Math.min(width, cellHeight),
+        gridWidth: width,
+        gridHeight: height
+      }
+    };
+  }
+
+  if (imageCount === 3) {
+    if (width >= height) {
+      const primaryWidth = (width - gap) * 0.58;
+      const secondaryWidth = width - gap - primaryWidth;
+      const secondaryHeight = (height - gap) / 2;
+
+      return {
+        cells: [
+          { x: 0, y: 0, width: primaryWidth, height },
+          { x: primaryWidth + gap, y: 0, width: secondaryWidth, height: secondaryHeight },
+          {
+            x: primaryWidth + gap,
+            y: secondaryHeight + gap,
+            width: secondaryWidth,
+            height: secondaryHeight
+          }
+        ],
+        metrics: {
+          outputWidth: width,
+          outputHeight: height,
+          columns: 2,
+          rows: 2,
+          cellSize: Math.min(primaryWidth, secondaryWidth, secondaryHeight),
+          gridWidth: width,
+          gridHeight: height
+        }
+      };
+    }
+
+    const primaryHeight = (height - gap) * 0.58;
+    const secondaryHeight = height - gap - primaryHeight;
+    const secondaryWidth = (width - gap) / 2;
+
+    return {
+      cells: [
+        { x: 0, y: 0, width, height: primaryHeight },
+        { x: 0, y: primaryHeight + gap, width: secondaryWidth, height: secondaryHeight },
+        {
+          x: secondaryWidth + gap,
+          y: primaryHeight + gap,
+          width: secondaryWidth,
+          height: secondaryHeight
+        }
+      ],
+      metrics: {
+        outputWidth: width,
+        outputHeight: height,
+        columns: 2,
+        rows: 2,
+        cellSize: Math.min(width, secondaryWidth, secondaryHeight),
+        gridWidth: width,
+        gridHeight: height
+      }
+    };
+  }
+
+  const cellWidth = (width - gap) / 2;
+  const cellHeight = (height - gap) / 2;
+  return {
+    cells: [
+      { x: 0, y: 0, width: cellWidth, height: cellHeight },
+      { x: cellWidth + gap, y: 0, width: cellWidth, height: cellHeight },
+      { x: 0, y: cellHeight + gap, width: cellWidth, height: cellHeight },
+      { x: cellWidth + gap, y: cellHeight + gap, width: cellWidth, height: cellHeight }
+    ],
+    metrics: {
+      outputWidth: width,
+      outputHeight: height,
+      columns: 2,
+      rows: 2,
+      cellSize: Math.min(cellWidth, cellHeight),
+      gridWidth: width,
+      gridHeight: height
+    }
+  };
+}
+
+function getCollageCells(
+  imageCount: number,
+  outputSize: CanvasSize,
+  settings: CollageSettings
+): { cells: CollageLayoutCell[]; metrics: CollageLayoutMetrics } {
+  return getBalancedSmallCountCells(imageCount, outputSize, settings) ?? getSquareGridCells(imageCount, outputSize, settings);
+}
+
 function withRoundedClip(
   context: CanvasRenderingContext2D,
   x: number,
@@ -296,7 +431,7 @@ export function getCollageLayoutMetrics(
   sizeOverride?: CanvasSize
 ): CollageLayoutMetrics {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getSquareGridCells(imageCount, outputSize, settings).metrics;
+  return getCollageCells(imageCount, outputSize, settings).metrics;
 }
 
 export function getCollageLayoutCells(
@@ -305,7 +440,7 @@ export function getCollageLayoutCells(
   sizeOverride?: CanvasSize
 ): CollageLayoutCell[] {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getSquareGridCells(imageCount, outputSize, settings).cells;
+  return getCollageCells(imageCount, outputSize, settings).cells;
 }
 
 export function getCollageLayoutFrame(
@@ -314,7 +449,7 @@ export function getCollageLayoutFrame(
   sizeOverride?: CanvasSize
 ): CollageLayoutFrame {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  const cells = getSquareGridCells(imageCount, outputSize, settings).cells;
+  const cells = getCollageCells(imageCount, outputSize, settings).cells;
   if (cells.length === 0) {
     return {
       x: 0,
@@ -356,7 +491,7 @@ export function renderCollage(
   context.fillStyle = settings.backgroundColor;
   context.fillRect(0, 0, outputSize.width, outputSize.height);
 
-  const { cells } = getSquareGridCells(images.length, outputSize, settings);
+  const { cells } = getCollageCells(images.length, outputSize, settings);
   cells.forEach((cell, index) => {
     const image = images[index];
     if (!image) {
