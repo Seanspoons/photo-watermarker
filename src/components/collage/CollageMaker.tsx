@@ -60,6 +60,8 @@ export function CollageMaker() {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const imagesRef = useRef<ImageAsset[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -274,32 +276,61 @@ export function CollageMaker() {
   };
 
   const handleMoveImage = (index: number, direction: -1 | 1) => {
-    setImages((current) => {
-      const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= current.length) {
-        return current;
-      }
-
-      const nextImages = [...current];
-      const [selected] = nextImages.splice(index, 1);
-      nextImages.splice(targetIndex, 0, selected);
-      return nextImages;
-    });
+    reorderImages(index, index + direction);
     setStatusMessage('Photo order updated.');
   };
 
   const handleSetFeatured = (index: number) => {
+    reorderImages(index, 0);
+    setStatusMessage('Featured photo updated.');
+  };
+
+  const reorderImages = (fromIndex: number, toIndex: number) => {
     setImages((current) => {
-      if (index <= 0 || index >= current.length) {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= current.length ||
+        toIndex >= current.length
+      ) {
         return current;
       }
 
       const nextImages = [...current];
-      const [selected] = nextImages.splice(index, 1);
-      nextImages.unshift(selected);
+      const [selected] = nextImages.splice(fromIndex, 1);
+      nextImages.splice(toIndex, 0, selected);
       return nextImages;
     });
-    setStatusMessage('Featured photo updated.');
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+    setDropTargetIndex(index);
+  };
+
+  const handleDragEnter = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) {
+      return;
+    }
+
+    setDropTargetIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+  };
+
+  const handleDrop = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) {
+      handleDragEnd();
+      return;
+    }
+
+    reorderImages(draggedIndex, index);
+    setStatusMessage('Photo order updated.');
+    handleDragEnd();
   };
 
   const handleExport = async (format: 'jpeg' | 'png', action: 'download' | 'share') => {
@@ -397,11 +428,32 @@ export function CollageMaker() {
                 <h2>Photos</h2>
               </div>
             </div>
+            <p className="helper-text">
+              Drag photos into place on desktop, or use the move buttons below. The first photo is
+              your main photo.
+            </p>
             {images.length > 0 ? (
               <div className="thumb-list">
                 {images.map((image, index) => (
-                  <div key={image.objectUrl} className="thumb-card">
+                  <div
+                    key={image.objectUrl}
+                    className={`thumb-card ${draggedIndex === index ? 'is-dragging' : ''} ${
+                      dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''
+                    }`}
+                    draggable={!isBusy}
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnter={() => handleDragEnter(index)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleDrop(index)}
+                    onDragEnd={handleDragEnd}
+                  >
                     <img src={image.objectUrl} alt={image.name} className="thumb-image" />
+                    <div className="thumb-meta">
+                      <span className="thumb-order">
+                        {index === 0 ? 'Main photo' : `Photo ${index + 1}`}
+                      </span>
+                      <span className="thumb-drag-hint">Drag to reorder</span>
+                    </div>
                     <p className="thumb-label">{image.name}</p>
                     <div className="thumb-actions">
                       <button
@@ -410,7 +462,7 @@ export function CollageMaker() {
                         onClick={() => handleMoveImage(index, -1)}
                         disabled={index === 0 || isBusy}
                       >
-                        Move Earlier
+                        Move Left
                       </button>
                       <button
                         type="button"
@@ -418,7 +470,7 @@ export function CollageMaker() {
                         onClick={() => handleMoveImage(index, 1)}
                         disabled={index === images.length - 1 || isBusy}
                       >
-                        Move Later
+                        Move Right
                       </button>
                       <button
                         type="button"
@@ -426,7 +478,7 @@ export function CollageMaker() {
                         onClick={() => handleSetFeatured(index)}
                         disabled={index === 0 || isBusy}
                       >
-                        Use as Main Photo
+                        Make Main
                       </button>
                       <button
                         type="button"

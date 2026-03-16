@@ -327,6 +327,24 @@ select:disabled {
 .thumb-card {
   display: grid;
   gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: #fdfbf6;
+  transition:
+    border-color 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.thumb-card.is-dragging {
+  opacity: 0.78;
+  transform: scale(0.98);
+}
+
+.thumb-card.is-drop-target {
+  border-color: #7b5a17;
+  box-shadow: 0 0 0 2px rgba(123, 90, 23, 0.12);
 }
 
 .thumb-image {
@@ -338,9 +356,27 @@ select:disabled {
   background: #f4f1ea;
 }
 
+.thumb-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.thumb-order,
+.thumb-drag-hint {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.thumb-order {
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .thumb-label {
   margin: 0;
-  color: var(--text-soft);
+  color: var(--text);
   font-size: 0.88rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -701,6 +737,15 @@ select:disabled {
 
   .preview-placeholder {
     min-height: 220px;
+  }
+
+  .thumb-list {
+    grid-template-columns: 1fr;
+  }
+
+  .thumb-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .site-footer-card,
