@@ -14,10 +14,14 @@ interface CollagePreviewProps {
   imageCount: number;
   canBuild: boolean;
   helperText?: string;
+  exportFrameNote?: string;
   previewCells?: CollageLayoutCell[];
+  previewImageUrls?: string[];
   isInteractive?: boolean;
+  selectedIndex?: number;
   draggedIndex?: number | null;
   dropTargetIndex?: number | null;
+  onTileSelect?: (index: number) => void;
   onTileDragStart?: (index: number) => void;
   onTileDragEnter?: (index: number) => void;
   onTileDrop?: (index: number) => void;
@@ -30,10 +34,14 @@ export function CollagePreview({
   imageCount,
   canBuild,
   helperText,
+  exportFrameNote,
   previewCells = [],
+  previewImageUrls = [],
   isInteractive = false,
+  selectedIndex = 0,
   draggedIndex = null,
   dropTargetIndex = null,
+  onTileSelect,
   onTileDragStart,
   onTileDragEnter,
   onTileDrop,
@@ -89,11 +97,20 @@ export function CollagePreview({
   const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(index));
-
-    const dragImage = document.createElement('canvas');
-    dragImage.width = 1;
-    dragImage.height = 1;
-    event.dataTransfer.setDragImage(dragImage, 0, 0);
+    const previewImageUrl = previewImageUrls[index];
+    if (previewImageUrl) {
+      const dragImage = document.createElement('img');
+      dragImage.src = previewImageUrl;
+      dragImage.width = 96;
+      dragImage.height = 96;
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-9999px';
+      dragImage.style.left = '-9999px';
+      dragImage.style.borderRadius = '16px';
+      document.body.appendChild(dragImage);
+      event.dataTransfer.setDragImage(dragImage, 48, 48);
+      requestAnimationFrame(() => dragImage.remove());
+    }
 
     onTileDragStart?.(index);
   };
@@ -120,6 +137,8 @@ export function CollagePreview({
                       key={`${cell.x}-${cell.y}-${index}`}
                       type="button"
                       className={`preview-dropzone ${
+                        selectedIndex === index ? 'is-selected' : ''
+                      } ${
                         draggedIndex === index ? 'is-dragging' : ''
                       } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''} ${
                         hoveredIndex === index && draggedIndex === null ? 'is-hovered' : ''
@@ -132,6 +151,7 @@ export function CollagePreview({
                       }}
                       draggable
                       tabIndex={-1}
+                      onClick={() => onTileSelect?.(index)}
                       onDragStart={(event) => handleTileDragStart(event, index)}
                       onDragEnter={() => onTileDragEnter?.(index)}
                       onDragOver={(event) => event.preventDefault()}
@@ -168,6 +188,7 @@ export function CollagePreview({
               Drag a tile to swap photo positions right here in the preview.
             </p>
           ) : null}
+          {exportFrameNote ? <p className="helper-text preview-export-note">{exportFrameNote}</p> : null}
         </div>
       ) : null}
     </section>

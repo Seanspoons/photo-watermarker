@@ -608,10 +608,14 @@ export function CollageMaker() {
             imageCount={images.length}
             canBuild={canBuildCollage}
             helperText={previewHelperText}
+            exportFrameNote="Everything inside this frame exports exactly as shown."
             previewCells={previewCells}
+            previewImageUrls={images.map((image) => image.objectUrl)}
             isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
+            selectedIndex={selectedImageIndex}
             draggedIndex={draggedIndex}
             dropTargetIndex={dropTargetIndex}
+            onTileSelect={setSelectedImageIndex}
             onTileDragStart={handleDragStart}
             onTileDragEnter={handleDragEnter}
             onTileDrop={handlePreviewDrop}

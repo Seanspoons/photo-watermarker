@@ -313,6 +313,10 @@ select:disabled {
   margin-top: -2px;
 }
 
+.preview-export-note {
+  color: var(--accent-soft);
+}
+
 .preview-shell {
   position: relative;
   overflow: hidden;
@@ -348,6 +352,10 @@ select:disabled {
   pointer-events: auto;
   cursor: grab;
   transition:
+    left 180ms ease,
+    top 180ms ease,
+    width 180ms ease,
+    height 180ms ease,
     background 140ms ease,
     border-color 140ms ease,
     box-shadow 140ms ease,
@@ -364,6 +372,11 @@ select:disabled {
   opacity: 0.55;
   transform: scale(0.985);
   cursor: grabbing;
+}
+
+.preview-dropzone.is-selected {
+  border-color: rgba(31, 59, 45, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(255, 252, 246, 0.84);
 }
 
 .preview-dropzone.is-drop-target {
