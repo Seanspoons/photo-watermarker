@@ -201,6 +201,14 @@ select:disabled {
   align-items: start;
 }
 
+.collage-layout-grid {
+  align-items: stretch;
+}
+
+.collage-layout-grid .left-column {
+  height: 100%;
+}
+
 .left-column,
 .right-column {
   display: grid;

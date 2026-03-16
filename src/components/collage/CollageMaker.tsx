@@ -612,7 +612,7 @@ export function CollageMaker() {
       {errorMessage ? <div className="message error-message">{errorMessage}</div> : null}
       {statusMessage ? <div className="message status-message">{statusMessage}</div> : null}
 
-      <section className="layout-grid">
+      <section className="layout-grid collage-layout-grid">
         <div className="left-column">
           <CollageUploadPanel
             onFilesSelect={handleFilesSelect}
