@@ -162,7 +162,7 @@ export function CollagePreview({
 
       {helperText && canBuild ? (
         <div className="preview-footer">
-          <p className="helper-text section-helper-text">{helperText}</p>
+          <p className="helper-text panel-description panel-description-tight">{helperText}</p>
           {isInteractive ? (
             <p className="helper-text preview-desktop-note">
               Drag a tile to swap photo positions right here in the preview.

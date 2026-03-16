@@ -649,7 +649,7 @@ export function CollageMaker() {
                 <h2>Photos</h2>
               </div>
             </div>
-            <p className="helper-text section-helper-text">
+            <p className="helper-text panel-description">
               On desktop, drag photos right in the preview. On mobile, use the move buttons below.
               The first photo is your main photo.
             </p>
@@ -726,7 +726,7 @@ export function CollageMaker() {
                 </div>
               </>
             ) : (
-              <p className="helper-text">Add a few photos and they will appear here.</p>
+              <p className="helper-text panel-description">Add a few photos and they will appear here.</p>
             )}
           </section>
 
@@ -773,7 +773,9 @@ export function CollageMaker() {
                 Start a New Collage
               </button>
             </div>
-            <p className="helper-text">Collages export at the full preset size in either layout mode.</p>
+            <p className="helper-text panel-description panel-description-tight">
+              Collages export at the full preset size in either layout mode.
+            </p>
           </section>
         </div>
       </section>

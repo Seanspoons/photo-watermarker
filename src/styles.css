@@ -293,6 +293,16 @@ select:disabled {
   margin-top: 14px;
 }
 
+.panel-description {
+  margin-top: 16px;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+
+.panel-description-tight {
+  margin-bottom: 0;
+}
+
 .preview-footer {
   display: grid;
   gap: 8px;
@@ -300,6 +310,7 @@ select:disabled {
 
 .preview-desktop-note {
   color: var(--accent-soft);
+  margin-top: -2px;
 }
 
 .preview-shell {
