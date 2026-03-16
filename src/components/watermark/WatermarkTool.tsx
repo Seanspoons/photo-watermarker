@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ConfirmModal } from '../ConfirmModal';
 import { PreviewCanvas } from '../PreviewCanvas';
 import { UploadPanel } from '../UploadPanel';
 import { WatermarkControls } from '../WatermarkControls';
@@ -79,10 +80,16 @@ export function WatermarkTool() {
   const [presetName, setPresetName] = useState('');
   const [previewMode, setPreviewMode] = useState<'after' | 'before'>('after');
   const [isBusy, setIsBusy] = useState(false);
+  const [canNativeShare, setCanNativeShare] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    setCanNativeShare('share' in navigator && 'canShare' in navigator);
+  }, []);
 
   useEffect(() => {
     window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
@@ -232,6 +239,7 @@ export function WatermarkTool() {
     setPreviewMode('after');
     setErrorMessage(null);
     setStatusMessage('Ready for another photo.');
+    setShowClearModal(false);
   };
 
   const runExport = async (format: ExportFormat, action: 'download' | 'share') => {
@@ -366,21 +374,23 @@ export function WatermarkTool() {
               >
                 Save PNG
               </button>
+              {canNativeShare ? (
+                <button
+                  type="button"
+                  className="ghost-button"
+                  onClick={() => runExport('jpeg', 'share')}
+                  disabled={!imageAsset || isBusy}
+                >
+                  Share / Save to Photos
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="ghost-button"
-                onClick={() => runExport(exportFormat, 'share')}
+                onClick={() => setShowClearModal(true)}
                 disabled={!imageAsset || isBusy}
               >
-                Share
-              </button>
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={handleChooseAnotherPhoto}
-                disabled={!imageAsset || isBusy}
-              >
-                Use a Different Photo
+                Start a New Watermark
               </button>
             </div>
 
@@ -390,6 +400,14 @@ export function WatermarkTool() {
       </section>
 
       <canvas ref={exportCanvasRef} className="sr-only" aria-hidden="true" />
+      <ConfirmModal
+        open={showClearModal}
+        title="Start a new watermark?"
+        message="This will remove the current photo and preview. Your saved looks and current text settings will stay."
+        confirmLabel="Start New Watermark"
+        onConfirm={handleChooseAnotherPhoto}
+        onCancel={() => setShowClearModal(false)}
+      />
     </>
   );
 }

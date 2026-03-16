@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ConfirmModal } from '../ConfirmModal';
 import { CollageSettings, ImageAsset } from '../../types';
 import {
   createDownloadFilename,
@@ -33,6 +34,7 @@ export function CollageMaker() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
   const imagesRef = useRef<ImageAsset[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -135,6 +137,7 @@ export function CollageMaker() {
     });
     setErrorMessage(null);
     setStatusMessage('Ready for a new collage.');
+    setShowClearModal(false);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -353,7 +356,7 @@ export function CollageMaker() {
               <button
                 type="button"
                 className="ghost-button"
-                onClick={handleClearPhotos}
+                onClick={() => setShowClearModal(true)}
                 disabled={images.length === 0 || isBusy}
               >
                 Start a New Collage
@@ -365,6 +368,14 @@ export function CollageMaker() {
       </section>
 
       <canvas ref={exportCanvasRef} className="sr-only" aria-hidden="true" />
+      <ConfirmModal
+        open={showClearModal}
+        title="Start a new collage?"
+        message="This will remove the current collage photos and preview. Your collage layout settings will stay."
+        confirmLabel="Start New Collage"
+        onConfirm={handleClearPhotos}
+        onCancel={() => setShowClearModal(false)}
+      />
     </>
   );
 }
