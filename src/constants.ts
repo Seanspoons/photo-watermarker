@@ -29,3 +29,4 @@ export const EXPORT_FORMAT_STORAGE_KEY = 'photo-watermarker:export-format';
 export const PRESETS_STORAGE_KEY = 'photo-watermarker:presets';
 export const ACTIVE_TOOL_STORAGE_KEY = 'photo-watermarker:active-tool';
 export const COLLAGE_PRESETS_STORAGE_KEY = 'photo-watermarker:collage-presets';
+export const COLLAGE_SETTINGS_STORAGE_KEY = 'photo-watermarker:collage-settings';

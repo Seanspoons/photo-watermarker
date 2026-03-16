@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmModal } from '../ConfirmModal';
-import { COLLAGE_PRESETS_STORAGE_KEY } from '../../constants';
+import {
+  COLLAGE_PRESETS_STORAGE_KEY,
+  COLLAGE_SETTINGS_STORAGE_KEY
+} from '../../constants';
 import { CollageSavedPreset, CollageSettings, ImageAsset } from '../../types';
 import {
   createDownloadFilename,
@@ -49,9 +52,26 @@ function loadStoredCollagePresets(): CollageSavedPreset[] {
   }
 }
 
+function loadStoredCollageSettings(): CollageSettings {
+  if (typeof window === 'undefined') {
+    return DEFAULT_COLLAGE_SETTINGS;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(COLLAGE_SETTINGS_STORAGE_KEY);
+    if (!raw) {
+      return DEFAULT_COLLAGE_SETTINGS;
+    }
+
+    return { ...DEFAULT_COLLAGE_SETTINGS, ...JSON.parse(raw) } as CollageSettings;
+  } catch {
+    return DEFAULT_COLLAGE_SETTINGS;
+  }
+}
+
 export function CollageMaker() {
   const [images, setImages] = useState<ImageAsset[]>([]);
-  const [settings, setSettings] = useState<CollageSettings>(DEFAULT_COLLAGE_SETTINGS);
+  const [settings, setSettings] = useState<CollageSettings>(loadStoredCollageSettings);
   const [savedPresets, setSavedPresets] = useState<CollageSavedPreset[]>(loadStoredCollagePresets);
   const [presetName, setPresetName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,6 +112,10 @@ export function CollageMaker() {
   useEffect(() => {
     window.localStorage.setItem(COLLAGE_PRESETS_STORAGE_KEY, JSON.stringify(savedPresets));
   }, [savedPresets]);
+
+  useEffect(() => {
+    window.localStorage.setItem(COLLAGE_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  }, [settings]);
 
   useEffect(() => {
     let isCancelled = false;
