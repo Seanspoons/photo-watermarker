@@ -18,6 +18,7 @@ import {
 } from '../../utils/collage/draftStorage';
 import { loadImageAsset } from '../../utils/imageLoader';
 import {
+  getCollageLayoutCells,
   getCollageLayoutMetrics,
   getCollageOutputSize,
   renderCollage
@@ -122,6 +123,7 @@ export function CollageMaker() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const [canPreviewDrag, setCanPreviewDrag] = useState(false);
   const imagesRef = useRef<ImageAsset[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -139,6 +141,22 @@ export function CollageMaker() {
   }, [images.length]);
 
   const canBuildCollage = images.length >= 2;
+  const previewSize = useMemo(() => {
+    const outputSize = getCollageOutputSize(settings);
+    const maxPreviewWidth = 960;
+    const scale = Math.min(maxPreviewWidth / outputSize.width, 1);
+    const dpr =
+      typeof window === 'undefined' ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+
+    return {
+      width: Math.round(outputSize.width * scale * dpr),
+      height: Math.round(outputSize.height * scale * dpr)
+    };
+  }, [settings]);
+  const previewCells = useMemo(
+    () => getCollageLayoutCells(images.length, settings, previewSize),
+    [images.length, previewSize, settings]
+  );
   const layoutMetrics = useMemo(
     () => getCollageLayoutMetrics(images.length, settings),
     [images.length, settings]
@@ -206,6 +224,21 @@ export function CollageMaker() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !('matchMedia' in window)) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(min-width: 921px) and (pointer: fine)');
+    const updateInteractivePreview = () => setCanPreviewDrag(mediaQuery.matches);
+    updateInteractivePreview();
+    mediaQuery.addEventListener('change', updateInteractivePreview);
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateInteractivePreview);
+    };
+  }, []);
+
+  useEffect(() => {
     window.localStorage.setItem(COLLAGE_PRESETS_STORAGE_KEY, JSON.stringify(savedPresets));
   }, [savedPresets]);
 
@@ -256,16 +289,11 @@ export function CollageMaker() {
       return;
     }
 
-    const outputSize = getCollageOutputSize(settings);
-    const maxPreviewWidth = 960;
-    const scale = Math.min(maxPreviewWidth / outputSize.width, 1);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
     renderCollage(previewCanvasRef.current, images, settings, {
-      width: Math.round(outputSize.width * scale * dpr),
-      height: Math.round(outputSize.height * scale * dpr)
+      width: previewSize.width,
+      height: previewSize.height
     });
-  }, [canBuildCollage, images, settings]);
+  }, [canBuildCollage, images, previewSize.height, previewSize.width, settings]);
 
   useEffect(() => {
     imagesRef.current = images;
@@ -448,6 +476,24 @@ export function CollageMaker() {
     });
   };
 
+  const swapImages = (fromIndex: number, toIndex: number) => {
+    setImages((current) => {
+      if (
+        fromIndex === toIndex ||
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= current.length ||
+        toIndex >= current.length
+      ) {
+        return current;
+      }
+
+      const nextImages = [...current];
+      [nextImages[fromIndex], nextImages[toIndex]] = [nextImages[toIndex], nextImages[fromIndex]];
+      return nextImages;
+    });
+  };
+
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
     setDropTargetIndex(index);
@@ -476,6 +522,18 @@ export function CollageMaker() {
     reorderImages(draggedIndex, index);
     setSelectedImageIndex(index);
     setStatusMessage('Photo order updated.');
+    handleDragEnd();
+  };
+
+  const handlePreviewDrop = (index: number) => {
+    if (draggedIndex === null || draggedIndex === index) {
+      handleDragEnd();
+      return;
+    }
+
+    swapImages(draggedIndex, index);
+    setSelectedImageIndex(index);
+    setStatusMessage('Preview order updated.');
     handleDragEnd();
   };
 
@@ -550,6 +608,14 @@ export function CollageMaker() {
             imageCount={images.length}
             canBuild={canBuildCollage}
             helperText={previewHelperText}
+            previewCells={previewCells}
+            isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
+            draggedIndex={draggedIndex}
+            dropTargetIndex={dropTargetIndex}
+            onTileDragStart={handleDragStart}
+            onTileDragEnter={handleDragEnter}
+            onTileDrop={handlePreviewDrop}
+            onTileDragEnd={handleDragEnd}
           />
         </div>
 
