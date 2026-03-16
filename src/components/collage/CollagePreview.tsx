@@ -1,4 +1,11 @@
-import { RefObject } from 'react';
+import {
+  DragEvent,
+  RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import { CollageLayoutCell } from '../../utils/collage/renderCollage';
 
 interface CollagePreviewProps {
@@ -32,6 +39,65 @@ export function CollagePreview({
   onTileDrop,
   onTileDragEnd
 }: CollagePreviewProps) {
+  const shellRef = useRef<HTMLDivElement>(null);
+  const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!shellRef.current) {
+      return;
+    }
+
+    const updateSize = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        return;
+      }
+
+      setDisplaySize({
+        width: canvas.clientWidth,
+        height: canvas.clientHeight
+      });
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(shellRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [canvasRef, canBuild, hasImages, previewCells.length]);
+
+  const scaledCells = useMemo(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || displaySize.width === 0 || displaySize.height === 0) {
+      return [];
+    }
+
+    const scaleX = displaySize.width / canvas.width;
+    const scaleY = displaySize.height / canvas.height;
+
+    return previewCells.map((cell) => ({
+      x: cell.x * scaleX,
+      y: cell.y * scaleY,
+      width: cell.width * scaleX,
+      height: cell.height * scaleY
+    }));
+  }, [canvasRef, displaySize.height, displaySize.width, previewCells]);
+
+  const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(index));
+
+    const dragImage = document.createElement('canvas');
+    dragImage.width = 1;
+    dragImage.height = 1;
+    event.dataTransfer.setDragImage(dragImage, 0, 0);
+
+    onTileDragStart?.(index);
+  };
+
   return (
     <section className="panel preview-panel">
       <div className="panel-heading">
@@ -42,20 +108,22 @@ export function CollagePreview({
         {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
       </div>
 
-      <div className="preview-shell">
+      <div ref={shellRef} className="preview-shell">
         {hasImages ? (
           canBuild ? (
             <>
               <canvas ref={canvasRef} className="preview-canvas" aria-label="Collage preview" />
-              {isInteractive && previewCells.length > 0 ? (
+              {isInteractive && scaledCells.length > 0 ? (
                 <div className="preview-dropzone-layer" aria-hidden="true">
-                  {previewCells.map((cell, index) => (
+                  {scaledCells.map((cell, index) => (
                     <button
                       key={`${cell.x}-${cell.y}-${index}`}
                       type="button"
                       className={`preview-dropzone ${
                         draggedIndex === index ? 'is-dragging' : ''
-                      } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''}`}
+                      } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''} ${
+                        hoveredIndex === index && draggedIndex === null ? 'is-hovered' : ''
+                      }`}
                       style={{
                         left: `${cell.x}px`,
                         top: `${cell.y}px`,
@@ -64,14 +132,16 @@ export function CollagePreview({
                       }}
                       draggable
                       tabIndex={-1}
-                      onDragStart={() => onTileDragStart?.(index)}
+                      onDragStart={(event) => handleTileDragStart(event, index)}
                       onDragEnter={() => onTileDragEnter?.(index)}
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={() => onTileDrop?.(index)}
                       onDragEnd={() => onTileDragEnd?.()}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
                     >
                       <span className="preview-dropzone-label">
-                        {index === 0 ? 'Main' : `Move here`}
+                        {index === 0 ? 'Main photo' : 'Swap here'}
                       </span>
                     </button>
                   ))}

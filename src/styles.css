@@ -335,6 +335,7 @@ select:disabled {
   background: rgba(255, 255, 255, 0.04);
   color: transparent;
   pointer-events: auto;
+  cursor: grab;
   transition:
     background 140ms ease,
     border-color 140ms ease,
@@ -342,7 +343,8 @@ select:disabled {
     transform 140ms ease;
 }
 
-.preview-dropzone:hover {
+.preview-dropzone:hover,
+.preview-dropzone.is-hovered {
   border-color: rgba(31, 59, 45, 0.36);
   background: rgba(31, 59, 45, 0.05);
 }
@@ -350,6 +352,7 @@ select:disabled {
 .preview-dropzone.is-dragging {
   opacity: 0.55;
   transform: scale(0.985);
+  cursor: grabbing;
 }
 
 .preview-dropzone.is-drop-target {
@@ -373,6 +376,7 @@ select:disabled {
 }
 
 .preview-dropzone:hover .preview-dropzone-label,
+.preview-dropzone.is-hovered .preview-dropzone-label,
 .preview-dropzone.is-drop-target .preview-dropzone-label {
   opacity: 1;
 }
