@@ -144,15 +144,29 @@ function getSquareGridCells(
   const offsetX = (outputSize.width - gridWidth) / 2;
   const offsetY = (outputSize.height - gridHeight) / 2;
   const span = getSpanDimensions(settings.featuredSpan);
+  const rowCounts = slots.reduce<Map<number, number>>((counts, slot) => {
+    counts.set(slot.row, (counts.get(slot.row) ?? 0) + 1);
+    return counts;
+  }, new Map());
+  const rowIndexes = new Map<number, number>();
 
   return {
     cells: slots.map((slot, index) => {
       const useFeatured = index === 0 && span.width <= safeColumns;
       const widthUnits = useFeatured ? span.width : 1;
       const heightUnits = useFeatured ? span.height : 1;
+      const rowIndex = rowIndexes.get(slot.row) ?? 0;
+      rowIndexes.set(slot.row, rowIndex + 1);
+      const rowItemCount = rowCounts.get(slot.row) ?? safeColumns;
+      const isBalancedUniformRow = settings.featuredSpan === '1x1' && rowItemCount < safeColumns;
+      const rowWidth = isBalancedUniformRow
+        ? cellSize * rowItemCount + settings.gap * Math.max(rowItemCount - 1, 0)
+        : gridWidth;
+      const rowOffsetX = isBalancedUniformRow ? (outputSize.width - rowWidth) / 2 : offsetX;
+      const columnIndex = isBalancedUniformRow ? rowIndex : slot.column;
 
       return {
-        x: offsetX + slot.column * (cellSize + settings.gap),
+        x: rowOffsetX + columnIndex * (cellSize + settings.gap),
         y: offsetY + slot.row * (cellSize + settings.gap),
         width: cellSize * widthUnits + settings.gap * (widthUnits - 1),
         height: cellSize * heightUnits + settings.gap * (heightUnits - 1)
