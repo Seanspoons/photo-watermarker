@@ -619,6 +619,13 @@ select:disabled {
   border: 1px solid var(--border);
 }
 
+.collage-warning {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff5e7;
+  border: 1px solid #efd0a2;
+}
+
 .field input[type="color"] {
   padding: 6px;
 }

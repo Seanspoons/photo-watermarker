@@ -12,6 +12,16 @@ interface Cell {
   height: number;
 }
 
+export interface CollageLayoutMetrics {
+  outputWidth: number;
+  outputHeight: number;
+  columns: number;
+  rows: number;
+  cellSize: number;
+  gridWidth: number;
+  gridHeight: number;
+}
+
 interface GridSlot {
   column: number;
   row: number;
@@ -107,9 +117,20 @@ function getSquareGridCells(
   imageCount: number,
   outputSize: CanvasSize,
   settings: CollageSettings
-): Cell[] {
+): { cells: Cell[]; metrics: CollageLayoutMetrics } {
   if (imageCount <= 0) {
-    return [];
+    return {
+      cells: [],
+      metrics: {
+        outputWidth: outputSize.width,
+        outputHeight: outputSize.height,
+        columns: clamp(settings.columns, 1, 1),
+        rows: 0,
+        cellSize: 0,
+        gridWidth: 0,
+        gridHeight: 0
+      }
+    };
   }
 
   const safeColumns = clamp(settings.columns, 1, Math.max(1, imageCount));
@@ -124,18 +145,29 @@ function getSquareGridCells(
   const offsetY = (outputSize.height - gridHeight) / 2;
   const span = getSpanDimensions(settings.featuredSpan);
 
-  return slots.map((slot, index) => {
-    const useFeatured = index === 0 && span.width <= safeColumns;
-    const widthUnits = useFeatured ? span.width : 1;
-    const heightUnits = useFeatured ? span.height : 1;
+  return {
+    cells: slots.map((slot, index) => {
+      const useFeatured = index === 0 && span.width <= safeColumns;
+      const widthUnits = useFeatured ? span.width : 1;
+      const heightUnits = useFeatured ? span.height : 1;
 
-    return {
-      x: offsetX + slot.column * (cellSize + settings.gap),
-      y: offsetY + slot.row * (cellSize + settings.gap),
-      width: cellSize * widthUnits + settings.gap * (widthUnits - 1),
-      height: cellSize * heightUnits + settings.gap * (heightUnits - 1)
-    };
-  });
+      return {
+        x: offsetX + slot.column * (cellSize + settings.gap),
+        y: offsetY + slot.row * (cellSize + settings.gap),
+        width: cellSize * widthUnits + settings.gap * (widthUnits - 1),
+        height: cellSize * heightUnits + settings.gap * (heightUnits - 1)
+      };
+    }),
+    metrics: {
+      outputWidth: outputSize.width,
+      outputHeight: outputSize.height,
+      columns: safeColumns,
+      rows,
+      cellSize,
+      gridWidth,
+      gridHeight
+    }
+  };
 }
 
 function withRoundedClip(
@@ -191,6 +223,15 @@ export function getCollageOutputSize(settings: CollageSettings): CanvasSize {
   return getOutputSize(settings);
 }
 
+export function getCollageLayoutMetrics(
+  imageCount: number,
+  settings: CollageSettings,
+  sizeOverride?: CanvasSize
+): CollageLayoutMetrics {
+  const outputSize = sizeOverride ?? getOutputSize(settings);
+  return getSquareGridCells(imageCount, outputSize, settings).metrics;
+}
+
 export function renderCollage(
   canvas: HTMLCanvasElement,
   images: ImageAsset[],
@@ -210,7 +251,7 @@ export function renderCollage(
   context.fillStyle = settings.backgroundColor;
   context.fillRect(0, 0, outputSize.width, outputSize.height);
 
-  const cells = getSquareGridCells(images.length, outputSize, settings);
+  const { cells } = getSquareGridCells(images.length, outputSize, settings);
   cells.forEach((cell, index) => {
     const image = images[index];
     if (!image) {

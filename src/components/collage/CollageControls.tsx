@@ -4,6 +4,7 @@ interface CollageControlsProps {
   settings: CollageSettings;
   presetName: string;
   savedPresets: CollageSavedPreset[];
+  layoutWarning: string | null;
   disabled?: boolean;
   onPresetNameChange: (value: string) => void;
   onSavePreset: () => void;
@@ -17,6 +18,7 @@ export function CollageControls({
   settings,
   presetName,
   savedPresets,
+  layoutWarning,
   disabled = false,
   onPresetNameChange,
   onSavePreset,
@@ -98,6 +100,13 @@ export function CollageControls({
                   : 'one tall main photo.'}
           </p>
         </div>
+
+        {layoutWarning ? (
+          <div className="field field-full collage-warning" role="status">
+            <span>Heads up</span>
+            <p className="helper-text">{layoutWarning}</p>
+          </div>
+        ) : null}
 
         <label className="field">
           <span>Size</span>

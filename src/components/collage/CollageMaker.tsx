@@ -17,7 +17,11 @@ import {
   saveCollageDraft
 } from '../../utils/collage/draftStorage';
 import { loadImageAsset } from '../../utils/imageLoader';
-import { getCollageOutputSize, renderCollage } from '../../utils/collage/renderCollage';
+import {
+  getCollageLayoutMetrics,
+  getCollageOutputSize,
+  renderCollage
+} from '../../utils/collage/renderCollage';
 import { CollageControls } from './CollageControls';
 import { CollagePreview } from './CollagePreview';
 import { CollageUploadPanel } from './CollageUploadPanel';
@@ -69,6 +73,22 @@ function loadStoredCollageSettings(): CollageSettings {
   }
 }
 
+function getRecommendedColumns(imageCount: number): number {
+  if (imageCount <= 4) {
+    return 2;
+  }
+
+  if (imageCount <= 9) {
+    return 3;
+  }
+
+  if (imageCount <= 16) {
+    return 4;
+  }
+
+  return 5;
+}
+
 export function CollageMaker() {
   const [images, setImages] = useState<ImageAsset[]>([]);
   const [settings, setSettings] = useState<CollageSettings>(loadStoredCollageSettings);
@@ -100,6 +120,29 @@ export function CollageMaker() {
   }, [images.length]);
 
   const canBuildCollage = images.length >= 2;
+  const layoutMetrics = useMemo(
+    () => getCollageLayoutMetrics(images.length, settings),
+    [images.length, settings]
+  );
+  const layoutWarning = useMemo(() => {
+    if (!canBuildCollage) {
+      return null;
+    }
+
+    if (layoutMetrics.cellSize < 150) {
+      return 'This layout will make each photo quite small. Try fewer columns, less spacing, or a larger output size.';
+    }
+
+    if (
+      settings.sizePreset === 'story' &&
+      settings.featuredSpan === '1x1' &&
+      layoutMetrics.gridHeight < layoutMetrics.outputHeight * 0.68
+    ) {
+      return 'This story layout leaves a lot of background space. A larger main photo often looks better here.';
+    }
+
+    return null;
+  }, [canBuildCollage, layoutMetrics, settings.featuredSpan, settings.sizePreset]);
   const previewHelperText =
     settings.featuredSpan === '1x1'
       ? 'Square grid mode keeps all tiles the same size.'
@@ -218,9 +261,14 @@ export function CollageMaker() {
     try {
       const filesToLoad = nextFiles.slice(0, roomRemaining);
       const loadedImages = await Promise.all(filesToLoad.map((file) => loadImageAsset(file)));
+      const nextImageCount = images.length + loadedImages.length;
 
       setImages((current) => [...current, ...loadedImages]);
-      setStatusMessage(`${images.length + loadedImages.length} photos ready.`);
+      setSettings((current) => ({
+        ...current,
+        columns: getRecommendedColumns(nextImageCount)
+      }));
+      setStatusMessage(`${nextImageCount} photos ready.`);
 
       if (nextFiles.length > roomRemaining) {
         setErrorMessage(`Only the first ${roomRemaining} additional photos were added.`);
@@ -450,6 +498,7 @@ export function CollageMaker() {
             settings={settings}
             presetName={presetName}
             savedPresets={savedPresets}
+            layoutWarning={layoutWarning}
             disabled={isBusy}
             onPresetNameChange={setPresetName}
             onSavePreset={handleSavePreset}
