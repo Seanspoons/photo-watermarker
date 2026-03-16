@@ -1,4 +1,5 @@
 import { ChangeEvent, DragEvent, useId, useState } from 'react';
+import { MAX_COLLAGE_IMAGES } from '../../constants';
 
 interface CollageUploadPanelProps {
   onFilesSelect: (files: FileList | File[]) => void;
@@ -63,7 +64,7 @@ export function CollageUploadPanel({
         />
         <span className="upload-title">Add Photos</span>
         <span className="upload-copy">
-          Add 2 to 20 photos. Portrait, landscape, and square images all work.
+          Add 2 to {MAX_COLLAGE_IMAGES} photos. Portrait, landscape, and square images all work.
         </span>
       </label>
     </section>

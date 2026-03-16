@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmModal } from '../ConfirmModal';
 import {
+  MAX_COLLAGE_IMAGES,
   COLLAGE_PRESETS_STORAGE_KEY,
   COLLAGE_SETTINGS_STORAGE_KEY
 } from '../../constants';
@@ -27,8 +28,6 @@ import {
 import { CollageControls } from './CollageControls';
 import { CollagePreview } from './CollagePreview';
 import { CollageUploadPanel } from './CollageUploadPanel';
-
-const MAX_IMAGES = 20;
 
 const DEFAULT_COLLAGE_SETTINGS: CollageSettings = {
   sizePreset: 'instagram-square',
@@ -345,10 +344,10 @@ export function CollageMaker() {
 
   const handleFilesSelect = async (selectedFiles: FileList | File[]) => {
     const nextFiles = Array.from(selectedFiles);
-    const roomRemaining = MAX_IMAGES - images.length;
+    const roomRemaining = MAX_COLLAGE_IMAGES - images.length;
 
     if (roomRemaining <= 0) {
-      setErrorMessage('You can add up to 20 photos in one collage.');
+      setErrorMessage(`You can add up to ${MAX_COLLAGE_IMAGES} photos in one collage.`);
       return;
     }
 

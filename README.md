@@ -16,7 +16,7 @@ Live site: `https://photowatermarker.com`
 - Preview watermark and collage changes instantly on scaled preview canvases
 - Export full-resolution JPEG or PNG files with the applied result
 - Choose watermark text, corner, font, color, opacity, size, margin, bold, shadow, and background pill
-- Choose collage layout mode, output size preset, spacing, background, fit mode, and featured layout style
+- Choose collage output size, spacing, background, fit mode, and featured layout style
 - Reorder collage photos, remove them, or move one to the featured spot
 - Mobile-friendly UI with optional native share support on supported devices
 - Local-only processing for privacy
@@ -94,13 +94,14 @@ The collage tool is designed for simple multi-photo layouts without requiring de
 
 The collage maker currently supports:
 
-- Uniform Grid layouts with equal-sized tiles
+- Balanced layouts for 2 to 4 photos so small collages feel more natural
+- Equal-tile layouts for larger photo sets
 - Featured layouts where the first image is given more visual weight
 - Social-friendly output presets such as square, portrait, and story sizes
 - Mixed portrait, landscape, and square photos
 - Up to 20 photos per collage
 
-Odd image counts are handled by letting the final row or supporting area fill naturally without requiring manual design work.
+Odd image counts are handled with balanced final rows and guided layouts rather than leaving awkward empty holes.
 
 ## Image format support
 
@@ -141,7 +142,7 @@ src/
 ## Limitations
 
 - The app supports text watermarks only. It does not place image logos.
-- The collage maker uses guided layout templates rather than a full freeform editor.
+- The collage maker uses guided layouts rather than a full freeform editor.
 - HEIC conversion depends on browser memory limits for very large files.
 - Very large collage image sets can use significant memory on mobile devices.
 - `navigator.share` is only available on supported mobile and desktop browsers.
