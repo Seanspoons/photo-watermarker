@@ -1,397 +1,53 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { PreviewCanvas } from './components/PreviewCanvas';
-import { UploadPanel } from './components/UploadPanel';
-import { WatermarkControls } from './components/WatermarkControls';
-import {
-  DEFAULT_SETTINGS,
-  EXPORT_FORMAT_STORAGE_KEY,
-  PRESETS_STORAGE_KEY,
-  SETTINGS_STORAGE_KEY
-} from './constants';
-import { createDownloadFilename, exportCanvasToBlob, shareImageIfPossible, triggerDownload } from './utils/exportImage';
-import { loadImageAsset } from './utils/imageLoader';
-import { renderWatermarkedImage } from './utils/renderWatermark';
-import { ExportFormat, ImageAsset, SavedPreset, WatermarkSettings } from './types';
+import { useState } from 'react';
+import { CollageMaker } from './components/collage/CollageMaker';
+import { WatermarkTool } from './components/watermark/WatermarkTool';
 
-function loadStoredSettings(): WatermarkSettings {
-  if (typeof window === 'undefined') {
-    return DEFAULT_SETTINGS;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (!raw) {
-      return DEFAULT_SETTINGS;
-    }
-
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as WatermarkSettings;
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
-
-function getPreviewSize(width: number, height: number): { width: number; height: number } {
-  const maxWidth = 960;
-  const maxHeight = 720;
-  const scale = Math.min(maxWidth / width, maxHeight / height, 1);
-  return {
-    width: Math.round(width * scale),
-    height: Math.round(height * scale)
-  };
-}
-
-function loadStoredExportFormat(): ExportFormat {
-  if (typeof window === 'undefined') {
-    return 'jpeg';
-  }
-
-  const raw = window.localStorage.getItem(EXPORT_FORMAT_STORAGE_KEY);
-  return raw === 'png' ? 'png' : 'jpeg';
-}
-
-function loadStoredPresets(): SavedPreset[] {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(PRESETS_STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    return JSON.parse(raw) as SavedPreset[];
-  } catch {
-    return [];
-  }
-}
+type ToolKey = 'watermark' | 'collage';
 
 export default function App() {
   const logoUrl = `${import.meta.env.BASE_URL}icon.svg`;
-  const [imageAsset, setImageAsset] = useState<ImageAsset | null>(null);
-  const [settings, setSettings] = useState<WatermarkSettings>(loadStoredSettings);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>(loadStoredExportFormat);
-  const [savedPresets, setSavedPresets] = useState<SavedPreset[]>(loadStoredPresets);
-  const [presetName, setPresetName] = useState('');
-  const [previewMode, setPreviewMode] = useState<'after' | 'before'>('after');
-  const [isBusy, setIsBusy] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-  const exportCanvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    window.localStorage.setItem(EXPORT_FORMAT_STORAGE_KEY, exportFormat);
-  }, [exportFormat]);
-
-  useEffect(() => {
-    window.localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(savedPresets));
-  }, [savedPresets]);
-
-  useEffect(() => {
-    if (!imageAsset || !previewCanvasRef.current) {
-      return;
-    }
-
-    const previewCanvas = previewCanvasRef.current;
-    const previewSize = getPreviewSize(imageAsset.width, imageAsset.height);
-    if (previewMode === 'before') {
-      previewCanvas.width = previewSize.width;
-      previewCanvas.height = previewSize.height;
-      const context = previewCanvas.getContext('2d');
-      if (!context) {
-        return;
-      }
-
-      context.clearRect(0, 0, previewSize.width, previewSize.height);
-      context.drawImage(imageAsset.image, 0, 0, previewSize.width, previewSize.height);
-      return;
-    }
-
-    renderWatermarkedImage({
-      canvas: previewCanvas,
-      image: imageAsset.image,
-      width: previewSize.width,
-      height: previewSize.height,
-      settings
-    });
-  }, [imageAsset, previewMode, settings]);
-
-  useEffect(() => {
-    return () => {
-      if (imageAsset?.objectUrl) {
-        URL.revokeObjectURL(imageAsset.objectUrl);
-      }
-    };
-  }, [imageAsset]);
-
-  const imageSummary = useMemo(() => {
-    if (!imageAsset) {
-      return 'Choose a photo to get started.';
-    }
-
-    return `${imageAsset.name} • ${imageAsset.width} × ${imageAsset.height}px`;
-  }, [imageAsset]);
-
-  const handleFileSelect = async (file: File) => {
-    setIsBusy(true);
-    setErrorMessage(null);
-    setStatusMessage('Opening photo...');
-
-    try {
-      const nextAsset = await loadImageAsset(file);
-      setImageAsset((current) => {
-        if (current?.objectUrl) {
-          URL.revokeObjectURL(current.objectUrl);
-        }
-
-        return nextAsset;
-      });
-      setPreviewMode('after');
-      setStatusMessage('Photo ready.');
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'The photo could not be loaded.');
-      setStatusMessage(null);
-    } finally {
-      setIsBusy(false);
-    }
-  };
-
-  const handleSettingChange = <K extends keyof WatermarkSettings>(
-    key: K,
-    value: WatermarkSettings[K]
-  ) => {
-    setSettings((current) => ({ ...current, [key]: value }));
-  };
-
-  const handleReset = () => {
-    setSettings(DEFAULT_SETTINGS);
-    setExportFormat('jpeg');
-    setStatusMessage('Settings reset.');
-  };
-
-  const handleSavePreset = () => {
-    const trimmedName = presetName.trim();
-    if (!trimmedName) {
-      setErrorMessage('Add a name before saving this look.');
-      return;
-    }
-
-    const nextPreset: SavedPreset = {
-      id: `preset-${Date.now()}`,
-      name: trimmedName,
-      settings,
-      exportFormat
-    };
-
-    setSavedPresets((current) => [...current, nextPreset]);
-    setPresetName('');
-    setErrorMessage(null);
-    setStatusMessage(`Saved "${trimmedName}".`);
-  };
-
-  const handleApplyPreset = (presetId: string) => {
-    const preset = savedPresets.find((entry) => entry.id === presetId);
-    if (!preset) {
-      return;
-    }
-
-    setSettings(preset.settings);
-    setExportFormat(preset.exportFormat);
-    setErrorMessage(null);
-    setStatusMessage(`Applied "${preset.name}".`);
-  };
-
-  const handleDeletePreset = (presetId: string) => {
-    const preset = savedPresets.find((entry) => entry.id === presetId);
-    if (!preset) {
-      return;
-    }
-
-    setSavedPresets((current) => current.filter((entry) => entry.id !== presetId));
-    setErrorMessage(null);
-    setStatusMessage(`Removed "${preset.name}".`);
-  };
-
-  const handleChooseAnotherPhoto = () => {
-    setImageAsset((current) => {
-      if (current?.objectUrl) {
-        URL.revokeObjectURL(current.objectUrl);
-      }
-
-      return null;
-    });
-    setPreviewMode('after');
-    setErrorMessage(null);
-    setStatusMessage('Ready for another photo.');
-  };
-
-  const runExport = async (format: ExportFormat, action: 'download' | 'share') => {
-    if (!imageAsset || !exportCanvasRef.current) {
-      setErrorMessage('Choose a photo before saving.');
-      return;
-    }
-
-    setIsBusy(true);
-    setErrorMessage(null);
-    setStatusMessage(action === 'share' ? 'Getting your photo ready to share...' : 'Getting your photo ready...');
-
-    try {
-      renderWatermarkedImage({
-        canvas: exportCanvasRef.current,
-        image: imageAsset.image,
-        width: imageAsset.width,
-        height: imageAsset.height,
-        settings
-      });
-
-      const blob = await exportCanvasToBlob(exportCanvasRef.current, format, 0.94);
-      const filename = createDownloadFilename(imageAsset.name, format);
-
-      if (action === 'share') {
-        const shared = await shareImageIfPossible(blob, filename);
-        if (!shared) {
-          triggerDownload(blob, filename);
-          setStatusMessage('Sharing is not available here, so your photo was downloaded instead.');
-          return;
-        }
-
-        setStatusMessage('Shared successfully.');
-        return;
-      }
-
-      triggerDownload(blob, filename);
-      setStatusMessage(`${filename} is ready.`);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'The image could not be exported.');
-      setStatusMessage(null);
-    } finally {
-      setIsBusy(false);
-    }
-  };
+  const [activeTool, setActiveTool] = useState<ToolKey>('watermark');
 
   return (
     <div className="app-shell">
       <main className="app">
-        <section className="hero">
-          <div className="hero-copy-block">
+        <section className="site-intro panel">
+          <div className="site-intro-copy">
             <div className="brand-mark" aria-hidden="true">
               <img src={logoUrl} alt="" />
             </div>
             <div>
               <p className="eyebrow">Photo Watermarker</p>
-              <h1>Quick photo watermarking that feels simple.</h1>
+              <h1>Simple photo tools that stay on your device.</h1>
               <p className="hero-copy">
-                Pick a photo, add your wording, preview the look, and save the finished image in
-                just a couple of taps.
+                Use the watermarker for quick text marks, or switch to the collage maker to turn
+                multiple photos into one shareable image.
               </p>
-              <div className="hero-tags" aria-label="Supported image types">
-                <span className="hero-tag">JPEG</span>
-                <span className="hero-tag">PNG</span>
-                <span className="hero-tag">WebP</span>
-                <span className="hero-tag">HEIC</span>
-                <span className="hero-tag">HEIF</span>
-              </div>
             </div>
           </div>
-          <div className="hero-card">
-            <p className="hero-stat-label">Selected photo</p>
-            <p className="hero-stat">{imageSummary}</p>
-            <p className="helper-text">
-              Your photo stays on this device. Save a favorite look once and use it again anytime.
-            </p>
+          <div className="tool-switcher" role="tablist" aria-label="Photo tools">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTool === 'watermark'}
+              className={`tool-switch-button ${activeTool === 'watermark' ? 'is-active' : ''}`}
+              onClick={() => setActiveTool('watermark')}
+            >
+              Photo Watermarker
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTool === 'collage'}
+              className={`tool-switch-button ${activeTool === 'collage' ? 'is-active' : ''}`}
+              onClick={() => setActiveTool('collage')}
+            >
+              Collage Maker
+            </button>
           </div>
         </section>
 
-        {errorMessage ? <div className="message error-message">{errorMessage}</div> : null}
-        {statusMessage ? <div className="message status-message">{statusMessage}</div> : null}
-
-        <section className="layout-grid">
-          <div className="left-column">
-            <UploadPanel
-              onFileSelect={handleFileSelect}
-              disabled={isBusy}
-              fileName={imageAsset?.name}
-            />
-            <PreviewCanvas
-              canvasRef={previewCanvasRef}
-              hasImage={Boolean(imageAsset)}
-              beforeAfterMode={previewMode}
-              dimensions={imageAsset ? { width: imageAsset.width, height: imageAsset.height } : undefined}
-            />
-          </div>
-
-          <div className="right-column">
-            <WatermarkControls
-              settings={settings}
-              exportFormat={exportFormat}
-              beforeAfterMode={previewMode}
-              presetName={presetName}
-              savedPresets={savedPresets}
-              disabled={isBusy}
-              onSettingChange={handleSettingChange}
-              onExportFormatChange={setExportFormat}
-              onBeforeAfterChange={setPreviewMode}
-              onPresetNameChange={setPresetName}
-              onSavePreset={handleSavePreset}
-              onApplyPreset={handleApplyPreset}
-              onDeletePreset={handleDeletePreset}
-              onReset={handleReset}
-            />
-
-            <section className="panel">
-              <div className="panel-heading">
-                <div>
-                  <p className="eyebrow">Step 4</p>
-                  <h2>Export</h2>
-                </div>
-              </div>
-
-              <div className="export-actions">
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => runExport('jpeg', 'download')}
-                  disabled={!imageAsset || isBusy}
-                >
-                  Save JPEG
-                </button>
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => runExport('png', 'download')}
-                  disabled={!imageAsset || isBusy}
-                >
-                  Save PNG
-                </button>
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={() => runExport(exportFormat, 'share')}
-                  disabled={!imageAsset || isBusy}
-                >
-                  Share
-                </button>
-                <button
-                  type="button"
-                  className="ghost-button"
-                  onClick={handleChooseAnotherPhoto}
-                  disabled={!imageAsset || isBusy}
-                >
-                  Use a Different Photo
-                </button>
-              </div>
-
-              <p className="helper-text">
-                Saved photos keep the original image size.
-              </p>
-            </section>
-          </div>
-        </section>
+        {activeTool === 'watermark' ? <WatermarkTool /> : <CollageMaker />}
       </main>
 
       <footer className="site-footer">
@@ -408,8 +64,6 @@ export default function App() {
           <p className="site-footer-meta">© 2026 Photo Watermarker. Photos stay on your device.</p>
         </div>
       </footer>
-
-      <canvas ref={exportCanvasRef} className="sr-only" aria-hidden="true" />
     </div>
   );
 }

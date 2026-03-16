@@ -68,6 +68,20 @@ select:disabled {
   margin-bottom: 20px;
 }
 
+.site-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.9fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.site-intro-copy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
 .hero-copy-block {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -139,6 +153,30 @@ select:disabled {
 .hero-card {
   padding: 18px;
   align-self: end;
+}
+
+.tool-switcher {
+  display: grid;
+  gap: 12px;
+  align-self: end;
+}
+
+.tool-switch-button {
+  min-height: 60px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--accent);
+  text-align: left;
+  padding: 0 18px;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.tool-switch-button.is-active {
+  background: var(--accent);
+  color: #fffdf8;
+  border-color: var(--accent);
 }
 
 .hero-stat-label,
@@ -509,10 +547,12 @@ select:disabled {
     padding: 16px;
   }
 
-  .hero-copy-block {
+  .hero-copy-block,
+  .site-intro-copy {
     grid-template-columns: 1fr;
   }
 
+  .site-intro,
   .hero,
   .layout-grid {
     grid-template-columns: 1fr;
