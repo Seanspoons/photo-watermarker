@@ -30,16 +30,16 @@ interface WatermarkControlsProps {
   onReset: () => void;
 }
 
-const POSITION_OPTIONS: Array<{ label: string; value: WatermarkPosition }> = [
-  { label: 'Top left', value: 'top-left' },
-  { label: 'Top center', value: 'top-center' },
-  { label: 'Top right', value: 'top-right' },
-  { label: 'Center left', value: 'center-left' },
-  { label: 'Center', value: 'center' },
-  { label: 'Center right', value: 'center-right' },
-  { label: 'Bottom left', value: 'bottom-left' },
-  { label: 'Bottom center', value: 'bottom-center' },
-  { label: 'Bottom right', value: 'bottom-right' }
+const POSITION_OPTIONS: Array<{ label: string; value: WatermarkPosition; icon: string }> = [
+  { label: 'Top left', value: 'top-left', icon: '↖' },
+  { label: 'Top center', value: 'top-center', icon: '↑' },
+  { label: 'Top right', value: 'top-right', icon: '↗' },
+  { label: 'Center left', value: 'center-left', icon: '←' },
+  { label: 'Center', value: 'center', icon: '•' },
+  { label: 'Center right', value: 'center-right', icon: '→' },
+  { label: 'Bottom left', value: 'bottom-left', icon: '↙' },
+  { label: 'Bottom center', value: 'bottom-center', icon: '↓' },
+  { label: 'Bottom right', value: 'bottom-right', icon: '↘' }
 ];
 
 const LAYOUT_OPTIONS: Array<{ label: string; value: WatermarkLayout; description: string }> = [
@@ -176,7 +176,10 @@ export function WatermarkControls({
               disabled={disabled}
             >
               <span className="watermark-choice-preview watermark-choice-preview-image" aria-hidden="true">
-                ◇
+                <span className="watermark-image-glyph">
+                  <span className="watermark-image-glyph-badge" />
+                  <span className="watermark-image-glyph-mark" />
+                </span>
               </span>
               <span className="choice-card-copy">
                 <strong>Logo or icon</strong>
@@ -205,7 +208,7 @@ export function WatermarkControls({
                   }`}
                   aria-hidden="true"
                 >
-                  {option.value === 'single' ? '•' : '•••'}
+                  {option.value === 'proof' ? <span className="watermark-proof-glyph-center" /> : null}
                 </span>
                 <span className="choice-card-copy">
                   <strong>{option.label}</strong>
@@ -320,10 +323,13 @@ export function WatermarkControls({
                     onClick={() => onSettingChange('position', option.value)}
                     disabled={disabled}
                     aria-pressed={settings.position === option.value}
-                  >
-                    <span className="sr-only">{option.label}</span>
-                  </button>
-                ))}
+                >
+                  <span className="position-button-icon" aria-hidden="true">
+                    {option.icon}
+                  </span>
+                  <span className="sr-only">{option.label}</span>
+                </button>
+              ))}
               </div>
             </fieldset>
 

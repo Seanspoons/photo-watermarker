@@ -807,6 +807,29 @@ select:disabled {
   font-size: 1.4rem;
 }
 
+.watermark-image-glyph {
+  position: relative;
+  width: 42px;
+  height: 42px;
+}
+
+.watermark-image-glyph-badge,
+.watermark-image-glyph-mark {
+  position: absolute;
+  border-radius: 12px;
+  background: #d9a24d;
+}
+
+.watermark-image-glyph-badge {
+  inset: 10px 4px 4px 10px;
+}
+
+.watermark-image-glyph-mark {
+  inset: 4px 10px 10px 4px;
+  border: 3px solid #fffaf0;
+  background: transparent;
+}
+
 .watermark-choice-preview-single,
 .watermark-choice-preview-proof {
   position: relative;
@@ -819,19 +842,45 @@ select:disabled {
   content: "";
   position: absolute;
   background: #d9a24d;
-  border-radius: 999px;
+  border-radius: 10px;
 }
 
 .watermark-choice-preview-single::before {
-  width: 18px;
+  width: 36px;
   height: 18px;
-  right: 14px;
-  bottom: 14px;
+  right: 12px;
+  bottom: 16px;
+}
+
+.watermark-choice-preview-proof::before,
+.watermark-choice-preview-proof::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 76px;
+  background: #d9a24d;
+  border-radius: 10px;
+  transform: rotate(35deg);
 }
 
 .watermark-choice-preview-proof::before {
-  width: 18px;
-  height: 120px;
+  left: 12px;
+  top: -6px;
+}
+
+.watermark-choice-preview-proof::after {
+  right: 12px;
+  bottom: -6px;
+}
+
+.watermark-proof-glyph-center {
+  position: absolute;
+  width: 22px;
+  height: 76px;
+  left: 25px;
+  top: -2px;
+  background: #d9a24d;
+  border-radius: 10px;
   transform: rotate(35deg);
 }
 
@@ -842,19 +891,25 @@ select:disabled {
 }
 
 .position-button {
+  display: grid;
+  place-items: center;
   min-height: 54px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background:
-    radial-gradient(circle at center, rgba(217, 162, 77, 0.85) 0 5px, transparent 6px),
-    #ffffff;
+  background: #ffffff;
+  color: var(--accent-soft);
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .position-button.is-active {
   border-color: var(--accent);
-  background:
-    radial-gradient(circle at center, rgba(217, 162, 77, 0.95) 0 6px, transparent 7px),
-    #f6f1e6;
+  background: #f6f1e6;
+  color: #7b5a17;
+}
+
+.position-button-icon {
+  line-height: 1;
 }
 
 .watermark-upload-card {
