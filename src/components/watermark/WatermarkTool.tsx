@@ -26,6 +26,12 @@ import { ExportFormat, ImageAsset, SavedPreset, WatermarkSettings } from '../../
 
 type WatermarkConfirmAction = 'clear' | 'reset' | null;
 
+function normalizeWatermarkSettings(
+  settings: Partial<WatermarkSettings> | WatermarkSettings
+): WatermarkSettings {
+  return { ...DEFAULT_SETTINGS, ...settings };
+}
+
 function loadStoredSettings(): WatermarkSettings {
   if (typeof window === 'undefined') {
     return DEFAULT_SETTINGS;
@@ -37,7 +43,7 @@ function loadStoredSettings(): WatermarkSettings {
       return DEFAULT_SETTINGS;
     }
 
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as WatermarkSettings;
+    return normalizeWatermarkSettings(JSON.parse(raw) as Partial<WatermarkSettings>);
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -73,7 +79,10 @@ function loadStoredPresets(): SavedPreset[] {
       return [];
     }
 
-    return JSON.parse(raw) as SavedPreset[];
+    return (JSON.parse(raw) as SavedPreset[]).map((preset) => ({
+      ...preset,
+      settings: normalizeWatermarkSettings(preset.settings)
+    }));
   } catch {
     return [];
   }
@@ -137,7 +146,7 @@ export function WatermarkTool() {
           return;
         }
 
-        setSettings(draft.settings);
+        setSettings(normalizeWatermarkSettings(draft.settings));
         setExportFormat(draft.exportFormat);
         setPreviewMode(draft.previewMode);
         setImageAsset((current) => {
@@ -324,7 +333,7 @@ export function WatermarkTool() {
       return;
     }
 
-    setSettings(preset.settings);
+    setSettings(normalizeWatermarkSettings(preset.settings));
     setExportFormat(preset.exportFormat);
     setErrorMessage(null);
     setStatusMessage(`Applied "${preset.name}".`);
