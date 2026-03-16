@@ -331,6 +331,15 @@ select:disabled {
   border: 1px solid var(--border);
 }
 
+.preview-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 252, 246, 0.82);
+  pointer-events: none;
+}
+
 .preview-dropzone-layer {
   position: absolute;
   inset: 0;
@@ -422,7 +431,7 @@ select:disabled {
 .preview-canvas {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   max-height: 72vh;
   object-fit: contain;
 }
