@@ -7,6 +7,11 @@ import {
   shareImageIfPossible,
   triggerDownload
 } from '../../utils/exportImage';
+import {
+  clearCollageDraft,
+  loadCollageDraft,
+  saveCollageDraft
+} from '../../utils/collage/draftStorage';
 import { loadImageAsset } from '../../utils/imageLoader';
 import { getCollageOutputSize, renderCollage } from '../../utils/collage/renderCollage';
 import { CollageControls } from './CollageControls';
@@ -33,6 +38,7 @@ export function CollageMaker() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const imagesRef = useRef<ImageAsset[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,6 +67,44 @@ export function CollageMaker() {
   }, []);
 
   useEffect(() => {
+    let isCancelled = false;
+
+    async function restoreDraft() {
+      try {
+        const draft = await loadCollageDraft();
+        if (!draft || isCancelled) {
+          setHasLoadedDraft(true);
+          return;
+        }
+
+        const restoredImages = await Promise.all(draft.files.map((file) => loadImageAsset(file)));
+        if (isCancelled) {
+          restoredImages.forEach((image) => URL.revokeObjectURL(image.objectUrl));
+          return;
+        }
+
+        setSettings(draft.settings);
+        setImages(restoredImages);
+        setStatusMessage(restoredImages.length > 0 ? 'Restored your last collage.' : null);
+      } catch {
+        if (!isCancelled) {
+          setErrorMessage('Your last collage could not be restored.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setHasLoadedDraft(true);
+        }
+      }
+    }
+
+    void restoreDraft();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!canBuildCollage || !previewCanvasRef.current) {
       return;
     }
@@ -79,6 +123,17 @@ export function CollageMaker() {
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
+
+  useEffect(() => {
+    if (!hasLoadedDraft) {
+      return;
+    }
+
+    void saveCollageDraft(
+      settings,
+      images.map((image) => image.file)
+    );
+  }, [hasLoadedDraft, images, settings]);
 
   useEffect(() => {
     return () => {
@@ -134,6 +189,7 @@ export function CollageMaker() {
       current.forEach((image) => URL.revokeObjectURL(image.objectUrl));
       return [];
     });
+    void clearCollageDraft();
     setErrorMessage(null);
     setStatusMessage('Ready for a new collage.');
     setShowClearModal(false);
