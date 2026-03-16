@@ -183,12 +183,13 @@ export function CollagePreview({
       {helperText && canBuild ? (
         <div className="preview-footer">
           <p className="helper-text panel-description panel-description-tight">{helperText}</p>
-          {isInteractive ? (
+          {isInteractive || exportFrameNote ? (
             <p className="helper-text preview-desktop-note">
-              Drag a tile to swap photo positions right here in the preview.
+              {isInteractive ? 'Drag a tile to swap photo positions right here in the preview.' : ''}
+              {isInteractive && exportFrameNote ? ' ' : ''}
+              {exportFrameNote ?? ''}
             </p>
           ) : null}
-          {exportFrameNote ? <p className="helper-text preview-export-note">{exportFrameNote}</p> : null}
         </div>
       ) : null}
     </section>

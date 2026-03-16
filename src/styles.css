@@ -313,10 +313,6 @@ select:disabled {
   margin-top: -2px;
 }
 
-.preview-export-note {
-  color: var(--accent-soft);
-}
-
 .preview-shell {
   position: relative;
   overflow: hidden;
