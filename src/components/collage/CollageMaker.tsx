@@ -611,10 +611,15 @@ export function CollageMaker() {
         <div className="hero-card">
           <p className="hero-stat-label">Your collage</p>
           <p className="hero-stat">{imageSummary}</p>
-          <p className="helper-text">
-            Add 2 to {MAX_COLLAGE_IMAGES} photos. Smaller sets stay balanced automatically, and
-            larger sets can use equal tiles or a larger main photo.
-          </p>
+          <div className="tip-note" role="note">
+            <span className="tip-note-icon" aria-hidden="true">
+              i
+            </span>
+            <p className="helper-text">
+              Add 2 to {MAX_COLLAGE_IMAGES} photos. Smaller sets stay balanced automatically, and
+              larger sets can use equal tiles or a larger main photo.
+            </p>
+          </div>
         </div>
       </section>
 
