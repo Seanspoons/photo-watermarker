@@ -50,6 +50,7 @@ export function CollagePreview({
   onTileDragEnd
 }: CollagePreviewProps) {
   const shellRef = useRef<HTMLDivElement>(null);
+  const dragImageRef = useRef<HTMLImageElement | null>(null);
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -119,6 +120,12 @@ export function CollagePreview({
   const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(index));
+
+    if (dragImageRef.current) {
+      dragImageRef.current.remove();
+      dragImageRef.current = null;
+    }
+
     const previewImageUrl = previewImageUrls[index];
     if (previewImageUrl) {
       const dragImage = document.createElement('img');
@@ -129,12 +136,22 @@ export function CollagePreview({
       dragImage.style.top = '-9999px';
       dragImage.style.left = '-9999px';
       dragImage.style.borderRadius = '16px';
+      dragImage.style.pointerEvents = 'none';
       document.body.appendChild(dragImage);
+      dragImageRef.current = dragImage;
       event.dataTransfer.setDragImage(dragImage, 48, 48);
-      requestAnimationFrame(() => dragImage.remove());
     }
 
     onTileDragStart?.(index);
+  };
+
+  const handleTileDragEnd = () => {
+    if (dragImageRef.current) {
+      dragImageRef.current.remove();
+      dragImageRef.current = null;
+    }
+
+    onTileDragEnd?.();
   };
 
   return (
@@ -192,7 +209,7 @@ export function CollagePreview({
                       onDragEnter={() => onTileDragEnter?.(index)}
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={() => onTileDrop?.(index)}
-                      onDragEnd={() => onTileDragEnd?.()}
+                      onDragEnd={handleTileDragEnd}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
