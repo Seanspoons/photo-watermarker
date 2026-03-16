@@ -639,31 +639,6 @@ export function CollageMaker() {
             onTileDrop={handlePreviewDrop}
             onTileDragEnd={handleDragEnd}
           />
-        </div>
-
-        <div className="right-column">
-          <CollageControls
-            settings={settings}
-            presetName={presetName}
-            savedPresets={savedPresets}
-            usesBalancedLayout={usesBalancedLayout}
-            layoutWarning={layoutAdvice.message}
-            warningActions={layoutAdvice.actions.map((action) => ({
-              label: action.label,
-              onClick: () => {
-                action.apply();
-                setStatusMessage(`${action.label} applied.`);
-              }
-            }))}
-            disabled={isBusy}
-            onPresetNameChange={setPresetName}
-            onSavePreset={handleSavePreset}
-            onApplyPreset={handleApplyPreset}
-            onDeletePreset={handleDeletePreset}
-            onAutoArrange={handleAutoArrange}
-            onChange={handleSettingsChange}
-            onReset={handleReset}
-          />
 
           <section className="panel">
             <div className="panel-heading">
@@ -752,6 +727,31 @@ export function CollageMaker() {
               <p className="helper-text panel-description">Add a few photos and they will appear here.</p>
             )}
           </section>
+        </div>
+
+        <div className="right-column">
+          <CollageControls
+            settings={settings}
+            presetName={presetName}
+            savedPresets={savedPresets}
+            usesBalancedLayout={usesBalancedLayout}
+            layoutWarning={layoutAdvice.message}
+            warningActions={layoutAdvice.actions.map((action) => ({
+              label: action.label,
+              onClick: () => {
+                action.apply();
+                setStatusMessage(`${action.label} applied.`);
+              }
+            }))}
+            disabled={isBusy}
+            onPresetNameChange={setPresetName}
+            onSavePreset={handleSavePreset}
+            onApplyPreset={handleApplyPreset}
+            onDeletePreset={handleDeletePreset}
+            onAutoArrange={handleAutoArrange}
+            onChange={handleSettingsChange}
+            onReset={handleReset}
+          />
 
           <section className="panel">
             <div className="panel-heading">
