@@ -13,7 +13,6 @@ interface CollagePreviewProps {
   hasImages: boolean;
   imageCount: number;
   canBuild: boolean;
-  previewAspectRatio?: number;
   helperText?: string;
   exportFrameNote?: string;
   previewCells?: CollageLayoutCell[];
@@ -34,7 +33,6 @@ export function CollagePreview({
   hasImages,
   imageCount,
   canBuild,
-  previewAspectRatio = 1,
   helperText,
   exportFrameNote,
   previewCells = [],
@@ -127,11 +125,7 @@ export function CollagePreview({
         {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
       </div>
 
-      <div
-        ref={shellRef}
-        className="preview-shell"
-        style={{ aspectRatio: String(previewAspectRatio) }}
-      >
+      <div ref={shellRef} className="preview-shell">
         {hasImages ? (
           canBuild ? (
             <>

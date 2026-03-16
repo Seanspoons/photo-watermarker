@@ -153,10 +153,6 @@ export function CollageMaker() {
       height: Math.round(outputSize.height * scale * dpr)
     };
   }, [settings]);
-  const outputAspectRatio = useMemo(() => {
-    const outputSize = getCollageOutputSize(settings);
-    return outputSize.width / outputSize.height;
-  }, [settings]);
   const previewCells = useMemo(
     () => getCollageLayoutCells(images.length, settings, previewSize),
     [images.length, previewSize, settings]
@@ -611,7 +607,6 @@ export function CollageMaker() {
             hasImages={images.length > 0}
             imageCount={images.length}
             canBuild={canBuildCollage}
-            previewAspectRatio={outputAspectRatio}
             helperText={previewHelperText}
             exportFrameNote="Everything inside this frame exports exactly as shown."
             previewCells={previewCells}
