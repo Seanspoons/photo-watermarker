@@ -424,6 +424,7 @@ select:disabled {
   }
 }
 
+.preview-sticky-wrap,
 .preview-panel {
   align-self: start;
 }
@@ -1030,7 +1031,7 @@ select:disabled {
 }
 
 @media (min-width: 921px) {
-  .preview-panel {
+  .preview-sticky-wrap {
     position: sticky;
     top: 20px;
   }

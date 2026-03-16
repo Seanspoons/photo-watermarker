@@ -619,26 +619,28 @@ export function CollageMaker() {
             disabled={isBusy}
             imageCount={images.length}
           />
-          <CollagePreview
-            canvasRef={previewCanvasRef}
-            hasImages={images.length > 0}
-            imageCount={images.length}
-            canBuild={canBuildCollage}
-            helperText={previewHelperText}
-            exportFrameNote="Everything inside this frame exports exactly as shown."
-            previewCells={previewDropzones}
-            previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
-            previewImageUrls={images.map((image) => image.objectUrl)}
-            isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
-            selectedIndex={selectedImageIndex}
-            draggedIndex={draggedIndex}
-            dropTargetIndex={dropTargetIndex}
-            onTileSelect={setSelectedImageIndex}
-            onTileDragStart={handleDragStart}
-            onTileDragEnter={handleDragEnter}
-            onTileDrop={handlePreviewDrop}
-            onTileDragEnd={handleDragEnd}
-          />
+          <div className="preview-sticky-wrap">
+            <CollagePreview
+              canvasRef={previewCanvasRef}
+              hasImages={images.length > 0}
+              imageCount={images.length}
+              canBuild={canBuildCollage}
+              helperText={previewHelperText}
+              exportFrameNote="Everything inside this frame exports exactly as shown."
+              previewCells={previewDropzones}
+              previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
+              previewImageUrls={images.map((image) => image.objectUrl)}
+              isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
+              selectedIndex={selectedImageIndex}
+              draggedIndex={draggedIndex}
+              dropTargetIndex={dropTargetIndex}
+              onTileSelect={setSelectedImageIndex}
+              onTileDragStart={handleDragStart}
+              onTileDragEnter={handleDragEnter}
+              onTileDrop={handlePreviewDrop}
+              onTileDragEnd={handleDragEnd}
+            />
+          </div>
         </div>
 
         <div className="right-column">
