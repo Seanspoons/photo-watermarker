@@ -86,40 +86,50 @@ function navigateTo(path: AppRoute) {
 function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
   return (
     <span className={`suite-tool-icon suite-tool-icon-${kind}`} aria-hidden="true">
-      {kind === 'watermarker' ? (
-        <>
-          <span className="suite-tool-icon-frame" />
-          <span className="suite-tool-icon-pill" />
-        </>
-      ) : null}
-      {kind === 'collage' ? (
-        <>
-          <span className="suite-tool-icon-cell suite-tool-icon-cell-a" />
-          <span className="suite-tool-icon-cell suite-tool-icon-cell-b" />
-          <span className="suite-tool-icon-cell suite-tool-icon-cell-c" />
-          <span className="suite-tool-icon-cell suite-tool-icon-cell-d" />
-        </>
-      ) : null}
-      {kind === 'resize' ? (
-        <>
-          <span className="suite-tool-icon-box" />
-          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-a" />
-          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-b" />
-        </>
-      ) : null}
-      {kind === 'compress' ? (
-        <>
-          <span className="suite-tool-icon-box" />
-          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-c" />
-          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-d" />
-        </>
-      ) : null}
-      {kind === 'border' ? (
-        <>
-          <span className="suite-tool-icon-border-outer" />
-          <span className="suite-tool-icon-border-inner" />
-        </>
-      ) : null}
+      <svg viewBox="0 0 72 72" className="suite-tool-icon-svg" focusable="false">
+        {kind === 'watermarker' ? (
+          <>
+            <rect x="14" y="14" width="44" height="44" rx="14" className="icon-surface" />
+            <rect x="30" y="39" width="20" height="9" rx="4.5" className="icon-accent-fill" />
+            <path d="M24 34l7-15 7 15" className="icon-accent-stroke" />
+            <path d="M27 28h8" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'collage' ? (
+          <>
+            <rect x="13" y="13" width="20" height="20" rx="8" className="icon-surface" />
+            <rect x="39" y="13" width="20" height="20" rx="8" className="icon-surface" />
+            <rect x="13" y="39" width="20" height="20" rx="8" className="icon-surface" />
+            <rect x="39" y="39" width="20" height="20" rx="8" className="icon-accent-soft-fill" />
+            <path d="M46 49l4-5 4 5 3-3" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'resize' ? (
+          <>
+            <rect x="18" y="18" width="36" height="36" rx="12" className="icon-surface" />
+            <path d="M28 28h-7v7" className="icon-accent-stroke" />
+            <path d="M44 44h7v-7" className="icon-accent-stroke" />
+            <path d="M21 35V21h14" className="icon-accent-stroke" />
+            <path d="M51 37v14H37" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'compress' ? (
+          <>
+            <rect x="18" y="18" width="36" height="36" rx="12" className="icon-surface" />
+            <path d="M28 24v24" className="icon-accent-stroke" />
+            <path d="M44 24v24" className="icon-accent-stroke" />
+            <path d="M24 28l4-4 4 4" className="icon-accent-stroke" />
+            <path d="M40 44l4 4 4-4" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'border' ? (
+          <>
+            <rect x="12" y="12" width="48" height="48" rx="16" className="icon-accent-soft-fill" />
+            <rect x="20" y="20" width="32" height="32" rx="10" className="icon-surface-strong" />
+            <rect x="25" y="25" width="22" height="22" rx="7" className="icon-accent-outline" />
+          </>
+        ) : null}
+      </svg>
     </span>
   );
 }
