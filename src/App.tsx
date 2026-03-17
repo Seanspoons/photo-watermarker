@@ -89,44 +89,42 @@ function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
       <svg viewBox="0 0 72 72" className="suite-tool-icon-svg" focusable="false">
         {kind === 'watermarker' ? (
           <>
-            <rect x="14" y="14" width="44" height="44" rx="14" className="icon-surface" />
-            <rect x="30" y="39" width="20" height="9" rx="4.5" className="icon-accent-fill" />
-            <path d="M24 34l7-15 7 15" className="icon-accent-stroke" />
-            <path d="M27 28h8" className="icon-accent-stroke" />
+            <rect x="13" y="13" width="46" height="46" rx="15" className="icon-surface" />
+            <path d="M23 41l8-18 8 18" className="icon-accent-stroke" />
+            <path d="M26 34h10" className="icon-accent-stroke" />
+            <rect x="36" y="40" width="14" height="7" rx="3.5" className="icon-accent-fill" />
           </>
         ) : null}
         {kind === 'collage' ? (
           <>
-            <rect x="13" y="13" width="20" height="20" rx="8" className="icon-surface" />
-            <rect x="39" y="13" width="20" height="20" rx="8" className="icon-surface" />
-            <rect x="13" y="39" width="20" height="20" rx="8" className="icon-surface" />
-            <rect x="39" y="39" width="20" height="20" rx="8" className="icon-accent-soft-fill" />
-            <path d="M46 49l4-5 4 5 3-3" className="icon-accent-stroke" />
+            <rect x="12" y="12" width="22" height="22" rx="8" className="icon-surface" />
+            <rect x="38" y="12" width="22" height="15" rx="7" className="icon-surface" />
+            <rect x="12" y="38" width="15" height="22" rx="7" className="icon-surface" />
+            <rect x="31" y="31" width="29" height="29" rx="10" className="icon-accent-soft-fill" />
           </>
         ) : null}
         {kind === 'resize' ? (
           <>
             <rect x="18" y="18" width="36" height="36" rx="12" className="icon-surface" />
-            <path d="M28 28h-7v7" className="icon-accent-stroke" />
-            <path d="M44 44h7v-7" className="icon-accent-stroke" />
-            <path d="M21 35V21h14" className="icon-accent-stroke" />
-            <path d="M51 37v14H37" className="icon-accent-stroke" />
+            <path d="M31 25h-7v7" className="icon-accent-stroke" />
+            <path d="M41 25h7v7" className="icon-accent-stroke" />
+            <path d="M31 47h-7v-7" className="icon-accent-stroke" />
+            <path d="M41 47h7v-7" className="icon-accent-stroke" />
           </>
         ) : null}
         {kind === 'compress' ? (
           <>
-            <rect x="18" y="18" width="36" height="36" rx="12" className="icon-surface" />
-            <path d="M28 24v24" className="icon-accent-stroke" />
-            <path d="M44 24v24" className="icon-accent-stroke" />
-            <path d="M24 28l4-4 4 4" className="icon-accent-stroke" />
-            <path d="M40 44l4 4 4-4" className="icon-accent-stroke" />
+            <rect x="16" y="20" width="40" height="32" rx="11" className="icon-surface" />
+            <path d="M27 26v20" className="icon-accent-stroke" />
+            <path d="M37 30v12" className="icon-accent-stroke" />
+            <path d="M47 34v4" className="icon-accent-stroke" />
           </>
         ) : null}
         {kind === 'border' ? (
           <>
-            <rect x="12" y="12" width="48" height="48" rx="16" className="icon-accent-soft-fill" />
-            <rect x="20" y="20" width="32" height="32" rx="10" className="icon-surface-strong" />
-            <rect x="25" y="25" width="22" height="22" rx="7" className="icon-accent-outline" />
+            <rect x="11" y="11" width="50" height="50" rx="17" className="icon-accent-soft-fill" />
+            <rect x="19" y="19" width="34" height="34" rx="11" className="icon-surface-strong" />
+            <rect x="25" y="25" width="22" height="22" rx="7" className="icon-surface" />
           </>
         ) : null}
       </svg>
