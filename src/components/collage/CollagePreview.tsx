@@ -394,6 +394,12 @@ export function CollagePreview({
     onTileDragEnd?.();
   };
 
+  const getDesktopDragIndex = (event: DragEvent<HTMLElement>) => {
+    const rawIndex = event.dataTransfer.getData('text/plain');
+    const parsedIndex = Number(rawIndex);
+    return Number.isInteger(parsedIndex) ? parsedIndex : null;
+  };
+
   const draggedPreviewRect = useMemo(() => {
     if (draggedIndex === null || !previewMetrics) {
       return null;
@@ -821,14 +827,15 @@ export function CollagePreview({
                           tabIndex={-1}
                           onDragEnter={() => setHoveredEmptySlot({ column: guide.column, row: guide.row })}
                           onDragOver={(event) => event.preventDefault()}
-                          onDrop={() =>
-                            activeDragIndexRef.current !== null &&
-                            handleEmptySlotDrop(
-                              activeDragIndexRef.current,
-                              guide.column,
-                              guide.row
-                            )
-                          }
+                          onDrop={(event) => {
+                            event.preventDefault();
+                            const dragIndex = getDesktopDragIndex(event);
+                            if (dragIndex === null) {
+                              return;
+                            }
+
+                            handleEmptySlotDrop(dragIndex, guide.column, guide.row);
+                          }}
                         />
                       ))
                     : null}
@@ -884,16 +891,21 @@ export function CollagePreview({
                         onTileDragEnter?.(index);
                       }}
                       onDragOver={(event) => event.preventDefault()}
-                      onDrop={() =>
-                        activeDragIndexRef.current !== null &&
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const dragIndex = getDesktopDragIndex(event);
+                        if (dragIndex === null) {
+                          return;
+                        }
+
                         handleEmptySlotDrop(
-                          activeDragIndexRef.current,
+                          dragIndex,
                           cell.column,
                           cell.row,
                           cell.colSpan,
                           cell.rowSpan
-                        )
-                      }
+                        );
+                      }}
                       onDragEnd={handleTileDragEnd}
                       onPointerDown={(event) => handleTouchDragStart(event, index, cell)}
                       onPointerMove={handleTouchDragMove}
