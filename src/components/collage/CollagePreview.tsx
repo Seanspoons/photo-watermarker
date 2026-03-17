@@ -215,20 +215,42 @@ export function CollagePreview({
     const scaleY = displaySize.height / canvas.height;
     const horizontalStep = (previewMetrics.cellSize + gap) * scaleX;
     const verticalStep = (previewMetrics.cellSize + gap) * scaleY;
+    const snapUnits = (distance: number, step: number) => {
+      const raw = distance / Math.max(step, 1);
+      return raw >= 0 ? Math.floor(raw + 0.35) : Math.ceil(raw - 0.35);
+    };
+
+    const rawDeltaColumns = event.clientX - resizeState.startX;
+    const rawDeltaRows = event.clientY - resizeState.startY;
     const deltaColumns =
-      resizeState.mode === 'bottom'
-        ? 0
-        : Math.round((event.clientX - resizeState.startX) / Math.max(horizontalStep, 1));
+      resizeState.mode === 'bottom' ? 0 : snapUnits(rawDeltaColumns, horizontalStep);
     const deltaRows =
-      resizeState.mode === 'right'
-        ? 0
-        : Math.round((event.clientY - resizeState.startY) / Math.max(verticalStep, 1));
+      resizeState.mode === 'right' ? 0 : snapUnits(rawDeltaRows, verticalStep);
+
+    const squareDelta =
+      resizeState.mode === 'corner'
+        ? snapUnits(
+            ((event.clientX - resizeState.startX) / Math.max(horizontalStep, 1) +
+              (event.clientY - resizeState.startY) / Math.max(verticalStep, 1)) /
+              2,
+            1
+          )
+        : 0;
 
     const nextColSpan = Math.min(
       resizeState.maxColSpan,
-      Math.max(1, resizeState.startColSpan + deltaColumns)
+      Math.max(
+        1,
+        resizeState.startColSpan + (resizeState.mode === 'corner' ? squareDelta : deltaColumns)
+      )
     );
-    const nextRowSpan = Math.min(4, Math.max(1, resizeState.startRowSpan + deltaRows));
+    const nextRowSpan = Math.min(
+      4,
+      Math.max(
+        1,
+        resizeState.startRowSpan + (resizeState.mode === 'corner' ? squareDelta : deltaRows)
+      )
+    );
 
     onTileResize?.(resizeState.index, nextColSpan, nextRowSpan);
   };

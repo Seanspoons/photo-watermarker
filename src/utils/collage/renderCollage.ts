@@ -158,6 +158,41 @@ function packTiles(tiles: CollageTile[], columns: number): { placements: PackedT
   };
 }
 
+function getTileArea(tiles: CollageTile[]) {
+  return tiles.reduce(
+    (total, tile) => total + normalizeSpan(tile.colSpan, 6) * normalizeSpan(tile.rowSpan, 6),
+    0
+  );
+}
+
+function chooseColumnCount(tiles: CollageTile[], settings: CollageSettings, outputSize: CanvasSize) {
+  const preferredColumns = clamp(settings.columns, 2, 6);
+  const totalArea = getTileArea(tiles);
+  const targetAspect = outputSize.width / outputSize.height;
+  const idealColumns = Math.max(2, Math.round(Math.sqrt(totalArea * targetAspect)));
+  const candidateMax = clamp(Math.max(preferredColumns + 2, idealColumns + 1), 2, 6);
+  let bestColumns = preferredColumns;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let candidateColumns = 2; candidateColumns <= candidateMax; candidateColumns += 1) {
+    const { rows } = packTiles(tiles, candidateColumns);
+    const gridAspect = candidateColumns / rows;
+    const emptyCells = candidateColumns * rows - totalArea;
+    const growthPenalty = candidateColumns > preferredColumns ? (candidateColumns - preferredColumns) * 0.18 : 0;
+    const score =
+      Math.abs(gridAspect - targetAspect) * 6 +
+      emptyCells * 0.35 +
+      growthPenalty;
+
+    if (score < bestScore) {
+      bestColumns = candidateColumns;
+      bestScore = score;
+    }
+  }
+
+  return bestColumns;
+}
+
 function getPackedTiles(
   tiles: CollageTile[],
   outputSize: CanvasSize,
@@ -178,7 +213,7 @@ function getPackedTiles(
     };
   }
 
-  const safeColumns = clamp(settings.columns, 2, 5);
+  const safeColumns = chooseColumnCount(tiles, settings, outputSize);
   const { placements, rows } = packTiles(tiles, safeColumns);
   const cellSize = Math.min(
     (outputSize.width - settings.gap * (safeColumns - 1)) / safeColumns,
