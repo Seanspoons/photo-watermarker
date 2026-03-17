@@ -410,7 +410,7 @@ export function CollageMaker() {
     if (layoutMetrics.cellSize < 150) {
       return {
         message:
-          'This layout will make each photo quite small. Try fewer columns, less spacing, or a larger output size.',
+          'This layout will make each photo quite small. Try fewer columns, less spacing, or a higher quality export.',
         actions: [
           {
             label: 'Use fewer columns',
@@ -437,8 +437,8 @@ export function CollageMaker() {
   const previewHelperText = canPreviewDrag
     ? 'Drag a tile to reorder it. Drag a handle to make it bigger or smaller.'
     : canTouchPreviewMove
-      ? 'Drag a tile in the preview to move it. Use the size buttons below the preview for quick resizing.'
-      : 'Use the photo actions below to reorder or resize a selected tile.';
+      ? 'Drag a tile in the preview to move it. Use the width and height sliders below the preview to resize it.'
+      : 'Use the controls below the preview to resize a selected tile.';
 
   useEffect(() => {
     setCanNativeShare('share' in navigator && 'canShare' in navigator);
