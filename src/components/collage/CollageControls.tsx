@@ -247,12 +247,6 @@ export function CollageControls({
           />
         </label>
 
-        <div className="field field-full collage-summary">
-          <span>Tile resizing</span>
-          <p className="helper-text">
-            Resize tiles directly in the preview. The rest of the collage will reflow automatically.
-          </p>
-        </div>
       </div>
     </section>
   );

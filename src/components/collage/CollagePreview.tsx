@@ -14,6 +14,8 @@ import {
 } from '../../utils/collage/renderCollage';
 
 interface CollagePreviewProps {
+  stepLabel?: string;
+  title?: string;
   canvasRef: RefObject<HTMLCanvasElement>;
   hasImages: boolean;
   imageCount: number;
@@ -43,6 +45,8 @@ interface CollagePreviewProps {
 }
 
 export function CollagePreview({
+  stepLabel = 'Step 3',
+  title = 'Preview',
   canvasRef,
   hasImages,
   imageCount,
@@ -608,8 +612,8 @@ export function CollagePreview({
     <section className="panel preview-panel">
       <div className="panel-heading">
         <div>
-          <p className="eyebrow">Step 3</p>
-          <h2>Preview</h2>
+          <p className="eyebrow">{stepLabel}</p>
+          <h2>{title}</h2>
         </div>
         {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
       </div>

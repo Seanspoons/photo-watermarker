@@ -150,6 +150,7 @@ export function CollageMaker() {
   const [canTouchPreviewMove, setCanTouchPreviewMove] = useState(false);
   const imagesRef = useRef<CollageTile[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const exportPreviewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const imageSummary = useMemo(() => {
@@ -346,6 +347,17 @@ export function CollageMaker() {
   }, [canBuildCollage, previewSize.height, previewSize.width, previewTiles, settings]);
 
   useEffect(() => {
+    if (!canBuildCollage || !exportPreviewCanvasRef.current) {
+      return;
+    }
+
+    renderCollage(exportPreviewCanvasRef.current, tiles, settings, {
+      width: previewSize.width,
+      height: previewSize.height
+    });
+  }, [canBuildCollage, previewSize.height, previewSize.width, settings, tiles]);
+
+  useEffect(() => {
     imagesRef.current = tiles;
   }, [tiles]);
 
@@ -454,9 +466,24 @@ export function CollageMaker() {
         }
       }
 
+      const shouldUseHighRes = nextColumns >= 5 && settings.sizePreset === 'instagram-square';
       setTiles(compactedTiles);
-      setSettings((current) => ({ ...current, [key]: value }));
-      setStatusMessage(`Set the grid to ${nextColumns} columns.`);
+      setSettings((current) => ({
+        ...current,
+        [key]: value,
+        sizePreset: shouldUseHighRes ? 'high-res-square' : current.sizePreset
+      }));
+      setStatusMessage(
+        shouldUseHighRes
+          ? `Set the grid to ${nextColumns} columns and switched to High Res for sharper tiles.`
+          : `Set the grid to ${nextColumns} columns.`
+      );
+      return;
+    }
+
+    if (key === 'sizePreset' && value === 'instagram-square' && settings.columns >= 5) {
+      setSettings((current) => ({ ...current, sizePreset: 'high-res-square' }));
+      setStatusMessage('High Res stays on for dense square collages so the tiles stay sharp.');
       return;
     }
 
@@ -556,11 +583,6 @@ export function CollageMaker() {
     setStatusMessage('Photo removed.');
   };
 
-  const handleMoveImage = (index: number, direction: -1 | 1) => {
-    reorderImages(index, index + direction);
-    setStatusMessage('Photo order updated.');
-  };
-
   const handleResizeTile = (index: number, colSpan: number, rowSpan: number) => {
     setTiles((current) => {
       const anchoredTiles = anchorTilesToCurrentLayout(current);
@@ -616,90 +638,94 @@ export function CollageMaker() {
       return null;
     }
 
+    const selectedTile = tiles[selectedImageIndex];
+
     return (
       <div
-        className={`mobile-photo-toolbar ${compact ? 'preview-mobile-toolbar' : ''}`}
+        className={`mobile-photo-toolbar collage-arrange-toolbar ${
+          compact ? 'preview-mobile-toolbar' : ''
+        }`}
         aria-live="polite"
       >
-        <p className="mobile-photo-toolbar-title">{tiles[selectedImageIndex].name}</p>
+        <p className="mobile-photo-toolbar-title">{selectedTile.name}</p>
         <p className="helper-text">
-          Current size: {tiles[selectedImageIndex].colSpan} × {tiles[selectedImageIndex].rowSpan}
+          Current size: {selectedTile.colSpan} × {selectedTile.rowSpan}
         </p>
-        <div className="mobile-photo-toolbar-actions">
-          <button
-            type="button"
-            className="thumb-inline-button"
-            onClick={() => handleResizeTile(selectedImageIndex, 1, 1)}
-            disabled={isBusy}
-          >
-            1×1
-          </button>
-          <button
-            type="button"
-            className="thumb-inline-button"
-            onClick={() => handleResizeTile(selectedImageIndex, 2, 1)}
-            disabled={isBusy}
-          >
-            2×1
-          </button>
-          <button
-            type="button"
-            className="thumb-inline-button"
-            onClick={() => handleResizeTile(selectedImageIndex, 1, 2)}
-            disabled={isBusy}
-          >
-            1×2
-          </button>
-          <button
-            type="button"
-            className="thumb-inline-button"
-            onClick={() => handleResizeTile(selectedImageIndex, 2, 2)}
-            disabled={isBusy}
-          >
-            2×2
-          </button>
-        </div>
-        {!canPreviewDrag ? (
-          <div className="mobile-photo-toolbar-actions">
-            {!canTouchPreviewMove ? (
-              <>
-                <button
-                  type="button"
-                  className="thumb-inline-button"
-                  onClick={() => handleMoveImage(selectedImageIndex, -1)}
-                  disabled={selectedImageIndex === 0 || isBusy}
-                >
-                  Move Up
-                </button>
-                <button
-                  type="button"
-                  className="thumb-inline-button"
-                  onClick={() => handleMoveImage(selectedImageIndex, 1)}
-                  disabled={selectedImageIndex === tiles.length - 1 || isBusy}
-                >
-                  Move Down
-                </button>
-              </>
-            ) : null}
-            <button
-              type="button"
-              className="thumb-inline-button is-danger"
-              onClick={() => handleRemoveImage(selectedImageIndex)}
-              disabled={isBusy}
-            >
-              Remove
-            </button>
+        {canTouchPreviewMove ? (
+          <div className="arrange-slider-grid">
+            <label className="field">
+              <span>Width ({selectedTile.colSpan})</span>
+              <input
+                type="range"
+                min="1"
+                max={String(MAX_COLLAGE_COLUMNS)}
+                step="1"
+                value={selectedTile.colSpan}
+                onChange={(event) =>
+                  handleResizeTile(selectedImageIndex, Number(event.target.value), selectedTile.rowSpan)
+                }
+                disabled={isBusy}
+              />
+            </label>
+            <label className="field">
+              <span>Height ({selectedTile.rowSpan})</span>
+              <input
+                type="range"
+                min="1"
+                max="8"
+                step="1"
+                value={selectedTile.rowSpan}
+                onChange={(event) =>
+                  handleResizeTile(selectedImageIndex, selectedTile.colSpan, Number(event.target.value))
+                }
+                disabled={isBusy}
+              />
+            </label>
           </div>
         ) : (
-          <button
-            type="button"
-            className="thumb-inline-button is-danger"
-            onClick={() => handleRemoveImage(selectedImageIndex)}
-            disabled={isBusy}
-          >
-            Remove
-          </button>
+          <div className="mobile-photo-toolbar-actions">
+            <button
+              type="button"
+              className="thumb-inline-button"
+              onClick={() => handleResizeTile(selectedImageIndex, 1, 1)}
+              disabled={isBusy}
+            >
+              1×1
+            </button>
+            <button
+              type="button"
+              className="thumb-inline-button"
+              onClick={() => handleResizeTile(selectedImageIndex, 2, 1)}
+              disabled={isBusy}
+            >
+              2×1
+            </button>
+            <button
+              type="button"
+              className="thumb-inline-button"
+              onClick={() => handleResizeTile(selectedImageIndex, 1, 2)}
+              disabled={isBusy}
+            >
+              1×2
+            </button>
+            <button
+              type="button"
+              className="thumb-inline-button"
+              onClick={() => handleResizeTile(selectedImageIndex, 2, 2)}
+              disabled={isBusy}
+            >
+              2×2
+            </button>
+          </div>
         )}
+        <button
+          type="button"
+          className="thumb-inline-button is-danger"
+          onClick={() => handleRemoveImage(selectedImageIndex)}
+          disabled={isBusy}
+        >
+          Remove Photo
+        </button>
       </div>
     );
   };
@@ -718,25 +744,6 @@ export function CollageMaker() {
             gridRow: packed.row
           }
         : tile;
-    });
-  };
-
-  const reorderImages = (fromIndex: number, toIndex: number) => {
-    setTiles((current) => {
-      if (
-        fromIndex === toIndex ||
-        fromIndex < 0 ||
-        toIndex < 0 ||
-        fromIndex >= current.length ||
-        toIndex >= current.length
-      ) {
-        return current;
-      }
-
-      const nextTiles = [...current];
-      const [selected] = nextTiles.splice(fromIndex, 1);
-      nextTiles.splice(toIndex, 0, selected);
-      return nextTiles;
     });
   };
 
@@ -760,18 +767,6 @@ export function CollageMaker() {
     if (canPreviewDrag) {
       setSelectedImageIndex(null);
     }
-  };
-
-  const handleDrop = (index: number) => {
-    if (draggedIndex === null || draggedIndex === index) {
-      handleDragEnd();
-      return;
-    }
-
-    reorderImages(draggedIndex, index);
-    setSelectedImageIndex(index);
-    setStatusMessage('Photo order updated.');
-    handleDragEnd();
   };
 
   const handlePreviewDrop = (index: number) => {
@@ -931,6 +926,8 @@ export function CollageMaker() {
           />
           <div className="preview-sticky-wrap">
             <CollagePreview
+              stepLabel="Step 3"
+              title="Arrange"
               canvasRef={previewCanvasRef}
               hasImages={tiles.length > 0}
               imageCount={tiles.length}
@@ -958,7 +955,7 @@ export function CollageMaker() {
               onTileResizeCommit={handleResizeCommit}
               onTileResizeCancel={handleResizeCancel}
             />
-            {!canPreviewDrag && canTouchPreviewMove ? renderSelectedTileActions(true) : null}
+            {selectedImageIndex !== null ? renderSelectedTileActions(true) : null}
           </div>
         </div>
 
@@ -989,70 +986,29 @@ export function CollageMaker() {
             <div className="panel-heading">
               <div>
                 <p className="eyebrow">Step 4</p>
-                <h2>Photos</h2>
-              </div>
-            </div>
-            <p className="helper-text panel-description">
-              {canPreviewDrag
-                ? 'Drag tiles in the preview to reorder them. Use the resize handles in the preview to change tile size.'
-                : 'Choose a photo, then use the actions below to reorder it, resize it, or remove it.'}
-            </p>
-            {tiles.length > 0 ? (
-              <>
-                <div className="thumb-list" role="list" aria-label="Collage photos">
-                  {tiles.map((tile, index) => (
-                    <div
-                      key={tile.id}
-                      className={`thumb-card ${selectedImageIndex === index ? 'is-selected' : ''} ${
-                        draggedIndex === index ? 'is-dragging' : ''
-                      } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''}`}
-                    >
-                      <button
-                        type="button"
-                        className="thumb-select-button"
-                        draggable={!isBusy}
-                        onClick={() => setSelectedImageIndex(index)}
-                        onDragStart={() => handleDragStart(index)}
-                        onDragEnter={() => handleDragEnter(index)}
-                        onDragOver={(event) => event.preventDefault()}
-                        onDrop={() => handleDrop(index)}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <img src={tile.objectUrl} alt={tile.name} className="thumb-image" />
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-hover-button thumb-remove-button"
-                        onClick={() => handleRemoveImage(index)}
-                        disabled={isBusy}
-                        aria-label={`Remove ${tile.name}`}
-                      >
-                        ×
-                      </button>
-                      <div className="thumb-meta">
-                        <span className="thumb-order">{`Photo ${index + 1}`}</span>
-                        <span className="thumb-drag-hint">
-                          {canPreviewDrag ? 'Preview drag' : 'Actions below'}
-                        </span>
-                      </div>
-                      <p className="thumb-label">{tile.name}</p>
-                    </div>
-                  ))}
-                </div>
-                {!canTouchPreviewMove ? renderSelectedTileActions(false) : null}
-              </>
-            ) : (
-              <p className="helper-text panel-description">Add a few photos and they will appear here.</p>
-            )}
-          </section>
-
-          <section className="panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Step 5</p>
                 <h2>Export</h2>
               </div>
             </div>
+            {canBuildCollage ? (
+              <div className="export-preview-block">
+                <p className="helper-text export-preview-label">Preview</p>
+                <div className="preview-shell collage-preview-shell export-preview-shell">
+                  <canvas
+                    ref={exportPreviewCanvasRef}
+                    className="preview-canvas collage-preview-canvas"
+                    aria-label="Final collage preview"
+                  />
+                </div>
+                <div className="tip-note panel-description panel-description-tight" role="note">
+                  <span className="tip-note-icon" aria-hidden="true">
+                    i
+                  </span>
+                  <p className="helper-text">
+                    This is the clean saved version without the arrange handles and guides.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <div className="export-actions">
               <button
                 type="button"
