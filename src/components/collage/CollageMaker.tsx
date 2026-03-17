@@ -5,7 +5,7 @@ import {
   COLLAGE_PRESETS_STORAGE_KEY,
   COLLAGE_SETTINGS_STORAGE_KEY
 } from '../../constants';
-import { CollageSavedPreset, CollageSettings, ImageAsset } from '../../types';
+import { CollageSavedPreset, CollageSettings, CollageTile, ImageAsset } from '../../types';
 import {
   createDownloadFilename,
   exportCanvasToBlob,
@@ -19,10 +19,9 @@ import {
 } from '../../utils/collage/draftStorage';
 import { loadImageAsset } from '../../utils/imageLoader';
 import {
-  getCollageLayoutCells,
   getCollageLayoutMetrics,
   getCollageOutputSize,
-  getRenderedImageRect,
+  getCollagePackedTiles,
   renderCollage
 } from '../../utils/collage/renderCollage';
 import { CollageControls } from './CollageControls';
@@ -38,9 +37,17 @@ const DEFAULT_COLLAGE_SETTINGS: CollageSettings = {
   backgroundColor: '#ffffff',
   fitMode: 'cover',
   cornerRadius: 0,
-  exportFormat: 'jpeg',
-  featuredSpan: '1x1'
+  exportFormat: 'jpeg'
 };
+
+function createCollageTile(image: ImageAsset): CollageTile {
+  return {
+    ...image,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    colSpan: 1,
+    rowSpan: 1
+  };
+}
 
 function loadStoredCollagePresets(): CollageSavedPreset[] {
   if (typeof window === 'undefined') {
@@ -98,21 +105,16 @@ function getRecommendedSettings(
 ): CollageSettings {
   const nextColumns = getRecommendedColumns(imageCount);
   const shouldUseHighRes = imageCount >= 10;
-  const shouldFeatureMainPhoto = currentSettings.sizePreset === 'story' || imageCount >= 7;
 
   return {
     ...currentSettings,
     columns: nextColumns,
-    sizePreset: shouldUseHighRes ? 'high-res-square' : currentSettings.sizePreset,
-    featuredSpan:
-      shouldFeatureMainPhoto && currentSettings.featuredSpan === '1x1'
-        ? '2x2'
-        : currentSettings.featuredSpan
+    sizePreset: shouldUseHighRes ? 'high-res-square' : currentSettings.sizePreset
   };
 }
 
 export function CollageMaker() {
-  const [images, setImages] = useState<ImageAsset[]>([]);
+  const [tiles, setTiles] = useState<CollageTile[]>([]);
   const [settings, setSettings] = useState<CollageSettings>(loadStoredCollageSettings);
   const [savedPresets, setSavedPresets] = useState<CollageSavedPreset[]>(loadStoredCollagePresets);
   const [presetName, setPresetName] = useState('');
@@ -126,23 +128,23 @@ export function CollageMaker() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [canPreviewDrag, setCanPreviewDrag] = useState(false);
-  const imagesRef = useRef<ImageAsset[]>([]);
+  const imagesRef = useRef<CollageTile[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const imageSummary = useMemo(() => {
-    if (images.length === 0) {
+    if (tiles.length === 0) {
       return 'Add at least 2 photos to start building a collage.';
     }
 
-    if (images.length === 1) {
+    if (tiles.length === 1) {
       return 'Add one more photo to turn this into a collage.';
     }
 
-    return `${images.length} photos ready for your collage.`;
-  }, [images.length]);
+    return `${tiles.length} photos ready for your collage.`;
+  }, [tiles.length]);
 
-  const canBuildCollage = images.length >= 2;
+  const canBuildCollage = tiles.length >= 2;
   const previewSize = useMemo(() => {
     const outputSize = getCollageOutputSize(settings);
     const maxPreviewWidth = 960;
@@ -155,29 +157,11 @@ export function CollageMaker() {
       height: Math.round(outputSize.height * scale * dpr)
     };
   }, [settings]);
-  const previewCells = useMemo(
-    () => getCollageLayoutCells(images.length, settings, previewSize),
-    [images.length, previewSize, settings]
+  const packedPreviewTiles = useMemo(
+    () => getCollagePackedTiles(tiles, settings, previewSize),
+    [tiles, settings, previewSize]
   );
-  const previewDropzones = useMemo(
-    () =>
-      previewCells.map((cell, index) => {
-        const image = images[index];
-        if (!image) {
-          return cell;
-        }
-
-        return getRenderedImageRect(cell, image.width, image.height, settings.fitMode);
-      }),
-    [images, previewCells, settings.fitMode]
-  );
-  const usesBalancedLayout =
-    settings.featuredSpan === '1x1' && images.length >= 2 && images.length <= 4;
-  const hasMainPhotoLayout = settings.featuredSpan !== '1x1';
-  const layoutMetrics = useMemo(
-    () => getCollageLayoutMetrics(images.length, settings),
-    [images.length, settings]
-  );
+  const layoutMetrics = useMemo(() => getCollageLayoutMetrics(tiles, settings), [tiles, settings]);
   const layoutAdvice = useMemo(() => {
     if (!canBuildCollage) {
       return { message: null, actions: [] as Array<{ label: string; apply: () => void }> };
@@ -208,36 +192,11 @@ export function CollageMaker() {
       };
     }
 
-    if (
-      settings.sizePreset === 'story' &&
-      settings.featuredSpan === '1x1' &&
-      layoutMetrics.gridHeight < layoutMetrics.outputHeight * 0.68
-    ) {
-      return {
-        message:
-          'This story layout leaves a lot of background space. A larger main photo often looks better here.',
-        actions: [
-          {
-            label: 'Make main photo larger',
-            apply: () =>
-              setSettings((current) => ({
-                ...current,
-                featuredSpan: '2x2'
-              }))
-          }
-        ]
-      };
-    }
-
     return { message: null, actions: [] as Array<{ label: string; apply: () => void }> };
-  }, [canBuildCollage, layoutMetrics, settings.featuredSpan, settings.sizePreset]);
+  }, [canBuildCollage, layoutMetrics]);
   const previewHelperText = canPreviewDrag
-    ? hasMainPhotoLayout
-      ? 'Drag tiles to reorder your collage. Hover a tile to make it the main photo.'
-      : 'Drag tiles to reorder your collage.'
-    : hasMainPhotoLayout
-      ? 'Use the photo actions below to reorder your collage or choose the main photo.'
-      : 'Use the photo actions below to reorder your collage.';
+    ? 'Drag a tile to reorder it. Drag a handle to make it bigger or smaller.'
+    : 'Use the photo actions below to reorder or resize a selected tile.';
 
   useEffect(() => {
     setCanNativeShare('share' in navigator && 'canShare' in navigator);
@@ -283,9 +242,19 @@ export function CollageMaker() {
           return;
         }
 
+        const restoredTiles = restoredImages.map((image, index) => {
+          const storedTile = draft.tileStates[index];
+          return {
+            ...createCollageTile(image),
+            id: storedTile?.id ?? `${Date.now()}-${index}`,
+            colSpan: storedTile?.colSpan ?? 1,
+            rowSpan: storedTile?.rowSpan ?? 1
+          };
+        });
+
         setSettings(draft.settings);
-        setImages(restoredImages);
-        setStatusMessage(restoredImages.length > 0 ? 'Restored your last collage.' : null);
+        setTiles(restoredTiles);
+        setStatusMessage(restoredTiles.length > 0 ? 'Restored your last collage.' : null);
       } catch {
         if (!isCancelled) {
           setErrorMessage('Your last collage could not be restored.');
@@ -309,19 +278,19 @@ export function CollageMaker() {
       return;
     }
 
-    renderCollage(previewCanvasRef.current, images, settings, {
+    renderCollage(previewCanvasRef.current, tiles, settings, {
       width: previewSize.width,
       height: previewSize.height
     });
-  }, [canBuildCollage, images, previewSize.height, previewSize.width, settings]);
+  }, [canBuildCollage, previewSize.height, previewSize.width, settings, tiles]);
 
   useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
+    imagesRef.current = tiles;
+  }, [tiles]);
 
   useEffect(() => {
     setSelectedImageIndex((current) => {
-      if (images.length === 0) {
+      if (tiles.length === 0) {
         return null;
       }
 
@@ -329,9 +298,9 @@ export function CollageMaker() {
         return null;
       }
 
-      return Math.min(current, images.length - 1);
+      return Math.min(current, tiles.length - 1);
     });
-  }, [images.length]);
+  }, [tiles.length]);
 
   useEffect(() => {
     if (!hasLoadedDraft) {
@@ -340,9 +309,14 @@ export function CollageMaker() {
 
     void saveCollageDraft(
       settings,
-      images.map((image) => image.file)
+      tiles.map((tile) => tile.file),
+      tiles.map((tile) => ({
+        id: tile.id,
+        colSpan: tile.colSpan,
+        rowSpan: tile.rowSpan
+      }))
     );
-  }, [hasLoadedDraft, images, settings]);
+  }, [hasLoadedDraft, settings, tiles]);
 
   useEffect(() => {
     return () => {
@@ -352,7 +326,7 @@ export function CollageMaker() {
 
   const handleFilesSelect = async (selectedFiles: FileList | File[]) => {
     const nextFiles = Array.from(selectedFiles);
-    const roomRemaining = MAX_COLLAGE_IMAGES - images.length;
+    const roomRemaining = MAX_COLLAGE_IMAGES - tiles.length;
 
     if (roomRemaining <= 0) {
       setErrorMessage(`You can add up to ${MAX_COLLAGE_IMAGES} photos in one collage.`);
@@ -366,9 +340,10 @@ export function CollageMaker() {
     try {
       const filesToLoad = nextFiles.slice(0, roomRemaining);
       const loadedImages = await Promise.all(filesToLoad.map((file) => loadImageAsset(file)));
-      const nextImageCount = images.length + loadedImages.length;
+      const nextImageCount = tiles.length + loadedImages.length;
+      const loadedTiles = loadedImages.map((image) => createCollageTile(image));
 
-      setImages((current) => [...current, ...loadedImages]);
+      setTiles((current) => [...current, ...loadedTiles]);
       setSettings((current) => getRecommendedSettings(nextImageCount, current));
       setStatusMessage(`${nextImageCount} photos ready.`);
 
@@ -391,12 +366,12 @@ export function CollageMaker() {
   };
 
   const handleAutoArrange = () => {
-    if (images.length === 0) {
+    if (tiles.length === 0) {
       setStatusMessage('Add photos first, then Auto arrange can help.');
       return;
     }
 
-    setSettings((current) => getRecommendedSettings(images.length, current));
+    setSettings((current) => getRecommendedSettings(tiles.length, current));
     setStatusMessage('Applied a suggested layout.');
   };
 
@@ -447,8 +422,8 @@ export function CollageMaker() {
   };
 
   const handleClearPhotos = () => {
-    setImages((current) => {
-      current.forEach((image) => URL.revokeObjectURL(image.objectUrl));
+    setTiles((current) => {
+      current.forEach((tile) => URL.revokeObjectURL(tile.objectUrl));
       return [];
     });
     void clearCollageDraft();
@@ -464,21 +439,21 @@ export function CollageMaker() {
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages((current) => {
-      const nextImages = [...current];
-      const [removed] = nextImages.splice(index, 1);
+    setTiles((current) => {
+      const nextTiles = [...current];
+      const [removed] = nextTiles.splice(index, 1);
       if (removed) {
         URL.revokeObjectURL(removed.objectUrl);
       }
 
-      return nextImages;
+      return nextTiles;
     });
     setSelectedImageIndex((current) => {
       if (current === null) {
         return null;
       }
 
-      return Math.max(0, Math.min(current, images.length - 2));
+      return Math.max(0, Math.min(current, tiles.length - 2));
     });
     setStatusMessage('Photo removed.');
   };
@@ -488,13 +463,8 @@ export function CollageMaker() {
     setStatusMessage('Photo order updated.');
   };
 
-  const handleSetFeatured = (index: number) => {
-    reorderImages(index, 0);
-    setStatusMessage('Featured photo updated.');
-  };
-
   const reorderImages = (fromIndex: number, toIndex: number) => {
-    setImages((current) => {
+    setTiles((current) => {
       if (
         fromIndex === toIndex ||
         fromIndex < 0 ||
@@ -505,15 +475,15 @@ export function CollageMaker() {
         return current;
       }
 
-      const nextImages = [...current];
-      const [selected] = nextImages.splice(fromIndex, 1);
-      nextImages.splice(toIndex, 0, selected);
-      return nextImages;
+      const nextTiles = [...current];
+      const [selected] = nextTiles.splice(fromIndex, 1);
+      nextTiles.splice(toIndex, 0, selected);
+      return nextTiles;
     });
   };
 
   const swapImages = (fromIndex: number, toIndex: number) => {
-    setImages((current) => {
+    setTiles((current) => {
       if (
         fromIndex === toIndex ||
         fromIndex < 0 ||
@@ -524,9 +494,9 @@ export function CollageMaker() {
         return current;
       }
 
-      const nextImages = [...current];
-      [nextImages[fromIndex], nextImages[toIndex]] = [nextImages[toIndex], nextImages[fromIndex]];
-      return nextImages;
+      const nextTiles = [...current];
+      [nextTiles[fromIndex], nextTiles[toIndex]] = [nextTiles[toIndex], nextTiles[fromIndex]];
+      return nextTiles;
     });
   };
 
@@ -587,7 +557,7 @@ export function CollageMaker() {
     setStatusMessage('Getting your collage ready...');
 
     try {
-      renderCollage(exportCanvasRef.current, images, settings);
+      renderCollage(exportCanvasRef.current, tiles, settings);
       const blob = await exportCanvasToBlob(exportCanvasRef.current, format, 0.94);
       const filename = createDownloadFilename('collage', format).replace('-watermarked', '');
 
@@ -630,8 +600,8 @@ export function CollageMaker() {
               i
             </span>
             <p className="helper-text">
-              Add 2 to {MAX_COLLAGE_IMAGES} photos. Smaller sets stay balanced automatically, and
-              larger sets can use equal tiles or a larger main photo.
+              Add 2 to {MAX_COLLAGE_IMAGES} photos. Start with simple tiles, then resize any photo
+              directly in the preview.
             </p>
           </div>
         </div>
@@ -645,26 +615,24 @@ export function CollageMaker() {
           <CollageUploadPanel
             onFilesSelect={handleFilesSelect}
             disabled={isBusy}
-            imageCount={images.length}
+            imageCount={tiles.length}
           />
           <div className="preview-sticky-wrap">
             <CollagePreview
               canvasRef={previewCanvasRef}
-              hasImages={images.length > 0}
-              imageCount={images.length}
+              hasImages={tiles.length > 0}
+              imageCount={tiles.length}
               canBuild={canBuildCollage}
               helperText={previewHelperText}
               exportFrameNote="Everything inside this frame exports exactly as shown."
-              showMainPhotoActions={hasMainPhotoLayout}
-              previewCells={previewDropzones}
+              previewCells={packedPreviewTiles}
               previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
-              previewImageUrls={images.map((image) => image.objectUrl)}
+              previewImageUrls={tiles.map((tile) => tile.objectUrl)}
               isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
               selectedIndex={selectedImageIndex ?? undefined}
               draggedIndex={draggedIndex}
               dropTargetIndex={dropTargetIndex}
               onTileSelect={setSelectedImageIndex}
-              onMakeMain={handleSetFeatured}
               onTileDragStart={handleDragStart}
               onTileDragEnter={handleDragEnter}
               onTileDrop={handlePreviewDrop}
@@ -678,7 +646,6 @@ export function CollageMaker() {
             settings={settings}
             presetName={presetName}
             savedPresets={savedPresets}
-            usesBalancedLayout={usesBalancedLayout}
             layoutWarning={layoutAdvice.message}
             warningActions={layoutAdvice.actions.map((action) => ({
               label: action.label,
@@ -706,19 +673,15 @@ export function CollageMaker() {
             </div>
             <p className="helper-text panel-description">
               {canPreviewDrag
-                ? hasMainPhotoLayout
-                  ? 'Drag tiles in the preview to reorder. Hover a photo card or preview tile to make it the main photo.'
-                  : 'Drag tiles in the preview to reorder. Hover a photo card to remove it.'
-                : hasMainPhotoLayout
-                  ? 'Choose a photo, then use the actions below to reorder it, remove it, or make it the main photo.'
-                  : 'Choose a photo, then use the actions below to reorder it or remove it.'}
+                ? 'Drag tiles in the preview to reorder them. Use the resize handles in the preview to change tile size.'
+                : 'Choose a photo, then use the actions below to reorder it, resize it, or remove it.'}
             </p>
-            {images.length > 0 ? (
+            {tiles.length > 0 ? (
               <>
                 <div className="thumb-list" role="list" aria-label="Collage photos">
-                  {images.map((image, index) => (
+                  {tiles.map((tile, index) => (
                     <div
-                      key={image.objectUrl}
+                      key={tile.id}
                       className={`thumb-card ${selectedImageIndex === index ? 'is-selected' : ''} ${
                         draggedIndex === index ? 'is-dragging' : ''
                       } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''}`}
@@ -734,55 +697,33 @@ export function CollageMaker() {
                         onDrop={() => handleDrop(index)}
                         onDragEnd={handleDragEnd}
                       >
-                        <img src={image.objectUrl} alt={image.name} className="thumb-image" />
+                        <img src={tile.objectUrl} alt={tile.name} className="thumb-image" />
                       </button>
                       <button
                         type="button"
                         className="thumb-hover-button thumb-remove-button"
                         onClick={() => handleRemoveImage(index)}
                         disabled={isBusy}
-                        aria-label={`Remove ${image.name}`}
+                        aria-label={`Remove ${tile.name}`}
                       >
                         ×
                       </button>
-                      {hasMainPhotoLayout && index !== 0 ? (
-                        <button
-                          type="button"
-                          className="thumb-hover-button thumb-main-button"
-                          onClick={() => handleSetFeatured(index)}
-                          disabled={isBusy}
-                        >
-                          Make Main
-                        </button>
-                      ) : null}
                       <div className="thumb-meta">
-                        <span className="thumb-order">
-                          {hasMainPhotoLayout && index === 0 ? 'Main photo' : `Photo ${index + 1}`}
-                        </span>
+                        <span className="thumb-order">{`Photo ${index + 1}`}</span>
                         <span className="thumb-drag-hint">
                           {canPreviewDrag ? 'Preview drag' : 'Actions below'}
                         </span>
                       </div>
-                      <p className="thumb-label">{image.name}</p>
+                      <p className="thumb-label">{tile.name}</p>
                     </div>
                   ))}
                 </div>
-                {!canPreviewDrag && selectedImageIndex !== null && images[selectedImageIndex] ? (
+                {!canPreviewDrag && selectedImageIndex !== null && tiles[selectedImageIndex] ? (
                   <div className="mobile-photo-toolbar" aria-live="polite">
                     <p className="mobile-photo-toolbar-title">
-                      {images[selectedImageIndex].name}
+                      {tiles[selectedImageIndex].name}
                     </p>
                     <div className="mobile-photo-toolbar-actions">
-                      {hasMainPhotoLayout && selectedImageIndex !== 0 ? (
-                        <button
-                          type="button"
-                          className="thumb-inline-button"
-                          onClick={() => handleSetFeatured(selectedImageIndex)}
-                          disabled={isBusy}
-                        >
-                          Make Main
-                        </button>
-                      ) : null}
                       <button
                         type="button"
                         className="thumb-inline-button"
@@ -795,7 +736,7 @@ export function CollageMaker() {
                         type="button"
                         className="thumb-inline-button"
                         onClick={() => handleMoveImage(selectedImageIndex, 1)}
-                        disabled={selectedImageIndex === images.length - 1 || isBusy}
+                        disabled={selectedImageIndex === tiles.length - 1 || isBusy}
                       >
                         Move Down
                       </button>
@@ -854,7 +795,7 @@ export function CollageMaker() {
                 type="button"
                 className="ghost-button"
                 onClick={() => setConfirmAction('clear')}
-                disabled={images.length === 0 || isBusy}
+                disabled={tiles.length === 0 || isBusy}
               >
                 Start a New Collage
               </button>
@@ -863,7 +804,7 @@ export function CollageMaker() {
               <span className="tip-note-icon" aria-hidden="true">
                 i
               </span>
-              <p className="helper-text">Collages export at the full preset size in either layout mode.</p>
+              <p className="helper-text">Collages export at the full preset size exactly as arranged.</p>
             </div>
           </section>
         </div>

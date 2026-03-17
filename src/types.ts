@@ -20,7 +20,6 @@ export type CollageSizePreset =
   | 'instagram-portrait'
   | 'story'
   | 'high-res-square';
-export type CollageFeaturedSpan = '1x1' | '2x1' | '1x2' | '2x2';
 
 export interface WatermarkSettings {
   kind: WatermarkKind;
@@ -52,6 +51,12 @@ export interface CollageSavedPreset {
   settings: CollageSettings;
 }
 
+export interface CollageTileDraftState {
+  id: string;
+  colSpan: number;
+  rowSpan: number;
+}
+
 export interface ImageAsset {
   file: File;
   objectUrl: string;
@@ -61,6 +66,12 @@ export interface ImageAsset {
   name: string;
   mimeType: string;
   wasConverted: boolean;
+}
+
+export interface CollageTile extends ImageAsset {
+  id: string;
+  colSpan: number;
+  rowSpan: number;
 }
 
 export interface RenderWatermarkOptions {
@@ -80,5 +91,4 @@ export interface CollageSettings {
   fitMode: CollageFitMode;
   cornerRadius: number;
   exportFormat: ExportFormat;
-  featuredSpan: CollageFeaturedSpan;
 }

@@ -1,4 +1,4 @@
-import { CollageFitMode, CollageFeaturedSpan, CollageSettings, ImageAsset } from '../../types';
+import { CollageFitMode, CollageSettings, CollageTile } from '../../types';
 
 interface CanvasSize {
   width: number;
@@ -10,6 +10,15 @@ export interface CollageLayoutCell {
   y: number;
   width: number;
   height: number;
+}
+
+export interface CollagePackedTile extends CollageLayoutCell {
+  id: string;
+  index: number;
+  column: number;
+  row: number;
+  colSpan: number;
+  rowSpan: number;
 }
 
 export interface CollageRenderedRect {
@@ -36,9 +45,13 @@ export interface CollageLayoutFrame {
   height: number;
 }
 
-interface GridSlot {
+interface PackedTilePlacement {
+  id: string;
+  index: number;
   column: number;
   row: number;
+  colSpan: number;
+  rowSpan: number;
 }
 
 const COLLAGE_SIZES: Record<CollageSettings['sizePreset'], CanvasSize> = {
@@ -56,89 +69,107 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function getSpanDimensions(span: CollageFeaturedSpan): { width: number; height: number } {
-  switch (span) {
-    case '2x2':
-      return { width: 2, height: 2 };
-    case '2x1':
-      return { width: 2, height: 1 };
-    case '1x2':
-      return { width: 1, height: 2 };
-    case '1x1':
-    default:
-      return { width: 1, height: 1 };
+function normalizeSpan(value: number, max: number) {
+  return clamp(Math.round(value), 1, Math.max(1, max));
+}
+
+function canFitAt(
+  occupancy: boolean[][],
+  column: number,
+  row: number,
+  colSpan: number,
+  rowSpan: number,
+  columns: number
+) {
+  if (column + colSpan > columns) {
+    return false;
+  }
+
+  for (let rowOffset = 0; rowOffset < rowSpan; rowOffset += 1) {
+    for (let columnOffset = 0; columnOffset < colSpan; columnOffset += 1) {
+      if (occupancy[row + rowOffset]?.[column + columnOffset]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function markOccupied(
+  occupancy: boolean[][],
+  column: number,
+  row: number,
+  colSpan: number,
+  rowSpan: number,
+  columns: number
+) {
+  for (let rowOffset = 0; rowOffset < rowSpan; rowOffset += 1) {
+    const targetRow = row + rowOffset;
+    if (!occupancy[targetRow]) {
+      occupancy[targetRow] = Array.from({ length: columns }, () => false);
+    }
+
+    for (let columnOffset = 0; columnOffset < colSpan; columnOffset += 1) {
+      occupancy[targetRow][column + columnOffset] = true;
+    }
   }
 }
 
-function buildGridSlots(
-  imageCount: number,
-  columns: number,
-  featuredSpan: CollageFeaturedSpan
-): { slots: GridSlot[]; rows: number } {
-  const safeColumns = clamp(columns, 1, Math.max(1, imageCount));
-  const span = getSpanDimensions(featuredSpan);
-  const useFeatured = imageCount > 0 && span.width <= safeColumns && span.width * span.height > 1;
-  const occupied = new Set<string>();
-  const slots: GridSlot[] = [];
-  let rows = 1;
+function packTiles(tiles: CollageTile[], columns: number): { placements: PackedTilePlacement[]; rows: number } {
+  const safeColumns = clamp(columns, 1, Math.max(1, columns));
+  const occupancy: boolean[][] = [];
+  const placements: PackedTilePlacement[] = [];
+  let maxRow = 0;
 
-  if (useFeatured) {
-    for (let row = 0; row < span.height; row += 1) {
-      for (let column = 0; column < span.width; column += 1) {
-        occupied.add(`${column}:${row}`);
-      }
-    }
-
-    slots.push({ column: 0, row: 0 });
-    rows = Math.max(rows, span.height);
-  } else if (imageCount > 0) {
-    occupied.add('0:0');
-    slots.push({ column: 0, row: 0 });
-  }
-
-  while (slots.length < imageCount) {
-    const row = Math.floor(occupied.size / safeColumns);
+  tiles.forEach((tile, index) => {
+    const colSpan = normalizeSpan(tile.colSpan, safeColumns);
+    const rowSpan = normalizeSpan(tile.rowSpan, 4);
+    let row = 0;
     let placed = false;
 
-    for (let currentRow = 0; currentRow <= rows + imageCount; currentRow += 1) {
-      for (let currentColumn = 0; currentColumn < safeColumns; currentColumn += 1) {
-        const key = `${currentColumn}:${currentRow}`;
-        if (occupied.has(key)) {
+    while (!placed) {
+      for (let column = 0; column <= safeColumns - colSpan; column += 1) {
+        if (!canFitAt(occupancy, column, row, colSpan, rowSpan, safeColumns)) {
           continue;
         }
 
-        occupied.add(key);
-        slots.push({ column: currentColumn, row: currentRow });
-        rows = Math.max(rows, currentRow + 1);
+        markOccupied(occupancy, column, row, colSpan, rowSpan, safeColumns);
+        placements.push({
+          id: tile.id,
+          index,
+          column,
+          row,
+          colSpan,
+          rowSpan
+        });
+        maxRow = Math.max(maxRow, row + rowSpan);
         placed = true;
         break;
       }
 
-      if (placed) {
-        break;
-      }
+      row += 1;
     }
+  });
 
-    if (!placed) {
-      rows = Math.max(rows, row + 1);
-    }
-  }
-
-  return { slots, rows: Math.max(rows, 1) };
+  return {
+    placements,
+    rows: Math.max(maxRow, 1)
+  };
 }
 
-function getSquareGridCells(
-  imageCount: number,
+function getPackedTiles(
+  tiles: CollageTile[],
   outputSize: CanvasSize,
   settings: CollageSettings
-): { cells: CollageLayoutCell[]; metrics: CollageLayoutMetrics } {
-  if (imageCount <= 0) {
+): { tiles: CollagePackedTile[]; metrics: CollageLayoutMetrics } {
+  if (tiles.length === 0) {
     return {
-      cells: [],
+      tiles: [],
       metrics: {
         outputWidth: outputSize.width,
         outputHeight: outputSize.height,
-        columns: clamp(settings.columns, 1, 1),
+        columns: settings.columns,
         rows: 0,
         cellSize: 0,
         gridWidth: 0,
@@ -147,8 +178,8 @@ function getSquareGridCells(
     };
   }
 
-  const safeColumns = clamp(settings.columns, 1, Math.max(1, imageCount));
-  const { slots, rows } = buildGridSlots(imageCount, safeColumns, settings.featuredSpan);
+  const safeColumns = clamp(settings.columns, 2, 5);
+  const { placements, rows } = packTiles(tiles, safeColumns);
   const cellSize = Math.min(
     (outputSize.width - settings.gap * (safeColumns - 1)) / safeColumns,
     (outputSize.height - settings.gap * (rows - 1)) / rows
@@ -157,35 +188,20 @@ function getSquareGridCells(
   const gridHeight = cellSize * rows + settings.gap * (rows - 1);
   const offsetX = (outputSize.width - gridWidth) / 2;
   const offsetY = (outputSize.height - gridHeight) / 2;
-  const span = getSpanDimensions(settings.featuredSpan);
-  const rowCounts = slots.reduce<Map<number, number>>((counts, slot) => {
-    counts.set(slot.row, (counts.get(slot.row) ?? 0) + 1);
-    return counts;
-  }, new Map());
-  const rowIndexes = new Map<number, number>();
 
   return {
-    cells: slots.map((slot, index) => {
-      const useFeatured = index === 0 && span.width <= safeColumns;
-      const widthUnits = useFeatured ? span.width : 1;
-      const heightUnits = useFeatured ? span.height : 1;
-      const rowIndex = rowIndexes.get(slot.row) ?? 0;
-      rowIndexes.set(slot.row, rowIndex + 1);
-      const rowItemCount = rowCounts.get(slot.row) ?? safeColumns;
-      const isBalancedUniformRow = settings.featuredSpan === '1x1' && rowItemCount < safeColumns;
-      const rowWidth = isBalancedUniformRow
-        ? cellSize * rowItemCount + settings.gap * Math.max(rowItemCount - 1, 0)
-        : gridWidth;
-      const rowOffsetX = isBalancedUniformRow ? (outputSize.width - rowWidth) / 2 : offsetX;
-      const columnIndex = isBalancedUniformRow ? rowIndex : slot.column;
-
-      return {
-        x: rowOffsetX + columnIndex * (cellSize + settings.gap),
-        y: offsetY + slot.row * (cellSize + settings.gap),
-        width: cellSize * widthUnits + settings.gap * (widthUnits - 1),
-        height: cellSize * heightUnits + settings.gap * (heightUnits - 1)
-      };
-    }),
+    tiles: placements.map((placement) => ({
+      id: placement.id,
+      index: placement.index,
+      column: placement.column,
+      row: placement.row,
+      colSpan: placement.colSpan,
+      rowSpan: placement.rowSpan,
+      x: offsetX + placement.column * (cellSize + settings.gap),
+      y: offsetY + placement.row * (cellSize + settings.gap),
+      width: cellSize * placement.colSpan + settings.gap * (placement.colSpan - 1),
+      height: cellSize * placement.rowSpan + settings.gap * (placement.rowSpan - 1)
+    })),
     metrics: {
       outputWidth: outputSize.width,
       outputHeight: outputSize.height,
@@ -196,141 +212,6 @@ function getSquareGridCells(
       gridHeight
     }
   };
-}
-
-function getBalancedSmallCountCells(
-  imageCount: number,
-  outputSize: CanvasSize,
-  settings: CollageSettings
-): { cells: CollageLayoutCell[]; metrics: CollageLayoutMetrics } | null {
-  if (settings.featuredSpan !== '1x1' || imageCount < 2 || imageCount > 4) {
-    return null;
-  }
-
-  const gap = settings.gap;
-  const { width, height } = outputSize;
-
-  if (imageCount === 2) {
-    if (width >= height) {
-      const cellWidth = (width - gap) / 2;
-      return {
-        cells: [
-          { x: 0, y: 0, width: cellWidth, height },
-          { x: cellWidth + gap, y: 0, width: cellWidth, height }
-        ],
-        metrics: {
-          outputWidth: width,
-          outputHeight: height,
-          columns: 2,
-          rows: 1,
-          cellSize: Math.min(cellWidth, height),
-          gridWidth: width,
-          gridHeight: height
-        }
-      };
-    }
-
-    const cellHeight = (height - gap) / 2;
-    return {
-      cells: [
-        { x: 0, y: 0, width, height: cellHeight },
-        { x: 0, y: cellHeight + gap, width, height: cellHeight }
-      ],
-      metrics: {
-        outputWidth: width,
-        outputHeight: height,
-        columns: 1,
-        rows: 2,
-        cellSize: Math.min(width, cellHeight),
-        gridWidth: width,
-        gridHeight: height
-      }
-    };
-  }
-
-  if (imageCount === 3) {
-    if (width >= height) {
-      const primaryWidth = (width - gap) * 0.58;
-      const secondaryWidth = width - gap - primaryWidth;
-      const secondaryHeight = (height - gap) / 2;
-
-      return {
-        cells: [
-          { x: 0, y: 0, width: primaryWidth, height },
-          { x: primaryWidth + gap, y: 0, width: secondaryWidth, height: secondaryHeight },
-          {
-            x: primaryWidth + gap,
-            y: secondaryHeight + gap,
-            width: secondaryWidth,
-            height: secondaryHeight
-          }
-        ],
-        metrics: {
-          outputWidth: width,
-          outputHeight: height,
-          columns: 2,
-          rows: 2,
-          cellSize: Math.min(primaryWidth, secondaryWidth, secondaryHeight),
-          gridWidth: width,
-          gridHeight: height
-        }
-      };
-    }
-
-    const primaryHeight = (height - gap) * 0.58;
-    const secondaryHeight = height - gap - primaryHeight;
-    const secondaryWidth = (width - gap) / 2;
-
-    return {
-      cells: [
-        { x: 0, y: 0, width, height: primaryHeight },
-        { x: 0, y: primaryHeight + gap, width: secondaryWidth, height: secondaryHeight },
-        {
-          x: secondaryWidth + gap,
-          y: primaryHeight + gap,
-          width: secondaryWidth,
-          height: secondaryHeight
-        }
-      ],
-      metrics: {
-        outputWidth: width,
-        outputHeight: height,
-        columns: 2,
-        rows: 2,
-        cellSize: Math.min(width, secondaryWidth, secondaryHeight),
-        gridWidth: width,
-        gridHeight: height
-      }
-    };
-  }
-
-  const cellWidth = (width - gap) / 2;
-  const cellHeight = (height - gap) / 2;
-  return {
-    cells: [
-      { x: 0, y: 0, width: cellWidth, height: cellHeight },
-      { x: cellWidth + gap, y: 0, width: cellWidth, height: cellHeight },
-      { x: 0, y: cellHeight + gap, width: cellWidth, height: cellHeight },
-      { x: cellWidth + gap, y: cellHeight + gap, width: cellWidth, height: cellHeight }
-    ],
-    metrics: {
-      outputWidth: width,
-      outputHeight: height,
-      columns: 2,
-      rows: 2,
-      cellSize: Math.min(cellWidth, cellHeight),
-      gridWidth: width,
-      gridHeight: height
-    }
-  };
-}
-
-function getCollageCells(
-  imageCount: number,
-  outputSize: CanvasSize,
-  settings: CollageSettings
-): { cells: CollageLayoutCell[]; metrics: CollageLayoutMetrics } {
-  return getBalancedSmallCountCells(imageCount, outputSize, settings) ?? getSquareGridCells(imageCount, outputSize, settings);
 }
 
 function withRoundedClip(
@@ -426,31 +307,40 @@ export function getCollageOutputSize(settings: CollageSettings): CanvasSize {
 }
 
 export function getCollageLayoutMetrics(
-  imageCount: number,
+  tiles: CollageTile[],
   settings: CollageSettings,
   sizeOverride?: CanvasSize
 ): CollageLayoutMetrics {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getCollageCells(imageCount, outputSize, settings).metrics;
+  return getPackedTiles(tiles, outputSize, settings).metrics;
 }
 
 export function getCollageLayoutCells(
-  imageCount: number,
+  tiles: CollageTile[],
   settings: CollageSettings,
   sizeOverride?: CanvasSize
 ): CollageLayoutCell[] {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getCollageCells(imageCount, outputSize, settings).cells;
+  return getPackedTiles(tiles, outputSize, settings).tiles;
+}
+
+export function getCollagePackedTiles(
+  tiles: CollageTile[],
+  settings: CollageSettings,
+  sizeOverride?: CanvasSize
+): CollagePackedTile[] {
+  const outputSize = sizeOverride ?? getOutputSize(settings);
+  return getPackedTiles(tiles, outputSize, settings).tiles;
 }
 
 export function getCollageLayoutFrame(
-  imageCount: number,
+  tiles: CollageTile[],
   settings: CollageSettings,
   sizeOverride?: CanvasSize
 ): CollageLayoutFrame {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  const cells = getCollageCells(imageCount, outputSize, settings).cells;
-  if (cells.length === 0) {
+  const packedTiles = getPackedTiles(tiles, outputSize, settings).tiles;
+  if (packedTiles.length === 0) {
     return {
       x: 0,
       y: 0,
@@ -459,10 +349,10 @@ export function getCollageLayoutFrame(
     };
   }
 
-  const minX = Math.min(...cells.map((cell) => cell.x));
-  const minY = Math.min(...cells.map((cell) => cell.y));
-  const maxX = Math.max(...cells.map((cell) => cell.x + cell.width));
-  const maxY = Math.max(...cells.map((cell) => cell.y + cell.height));
+  const minX = Math.min(...packedTiles.map((tile) => tile.x));
+  const minY = Math.min(...packedTiles.map((tile) => tile.y));
+  const maxX = Math.max(...packedTiles.map((tile) => tile.x + tile.width));
+  const maxY = Math.max(...packedTiles.map((tile) => tile.y + tile.height));
 
   return {
     x: minX,
@@ -474,7 +364,7 @@ export function getCollageLayoutFrame(
 
 export function renderCollage(
   canvas: HTMLCanvasElement,
-  images: ImageAsset[],
+  tiles: CollageTile[],
   settings: CollageSettings,
   sizeOverride?: CanvasSize
 ) {
@@ -491,25 +381,32 @@ export function renderCollage(
   context.fillStyle = settings.backgroundColor;
   context.fillRect(0, 0, outputSize.width, outputSize.height);
 
-  const { cells } = getCollageCells(images.length, outputSize, settings);
-  cells.forEach((cell, index) => {
-    const image = images[index];
-    if (!image) {
+  const { tiles: packedTiles } = getPackedTiles(tiles, outputSize, settings);
+  packedTiles.forEach((packedTile) => {
+    const tile = tiles[packedTile.index];
+    if (!tile) {
       return;
     }
 
     context.save();
     if (settings.cornerRadius > 0) {
-      withRoundedClip(context, cell.x, cell.y, cell.width, cell.height, settings.cornerRadius);
+      withRoundedClip(
+        context,
+        packedTile.x,
+        packedTile.y,
+        packedTile.width,
+        packedTile.height,
+        settings.cornerRadius
+      );
     }
 
     drawImageToRect(
       context,
-      image.image,
-      cell.x,
-      cell.y,
-      cell.width,
-      cell.height,
+      tile.image,
+      packedTile.x,
+      packedTile.y,
+      packedTile.width,
+      packedTile.height,
       settings.fitMode
     );
     context.restore();

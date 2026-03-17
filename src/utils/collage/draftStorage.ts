@@ -1,4 +1,4 @@
-import { CollageSettings } from '../../types';
+import { CollageSettings, CollageTileDraftState } from '../../types';
 
 const DATABASE_NAME = 'photo-watermarker';
 const DATABASE_VERSION = 1;
@@ -9,6 +9,7 @@ interface StoredCollageDraft {
   id: string;
   settings: CollageSettings;
   files: File[];
+  tileStates: CollageTileDraftState[];
 }
 
 function openDatabase(): Promise<IDBDatabase | null> {
@@ -48,7 +49,11 @@ export async function loadCollageDraft(): Promise<StoredCollageDraft | null> {
   });
 }
 
-export async function saveCollageDraft(settings: CollageSettings, files: File[]): Promise<void> {
+export async function saveCollageDraft(
+  settings: CollageSettings,
+  files: File[],
+  tileStates: CollageTileDraftState[]
+): Promise<void> {
   const database = await openDatabase();
   if (!database) {
     return;
@@ -60,7 +65,8 @@ export async function saveCollageDraft(settings: CollageSettings, files: File[])
     store.put({
       id: COLLAGE_DRAFT_KEY,
       settings,
-      files
+      files,
+      tileStates
     } satisfies StoredCollageDraft);
 
     transaction.oncomplete = () => {

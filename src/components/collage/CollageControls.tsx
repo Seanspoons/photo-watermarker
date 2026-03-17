@@ -36,7 +36,6 @@ interface CollageControlsProps {
   settings: CollageSettings;
   presetName: string;
   savedPresets: CollageSavedPreset[];
-  usesBalancedLayout: boolean;
   layoutWarning: string | null;
   warningActions: Array<{ label: string; onClick: () => void }>;
   disabled?: boolean;
@@ -53,7 +52,6 @@ export function CollageControls({
   settings,
   presetName,
   savedPresets,
-  usesBalancedLayout,
   layoutWarning,
   warningActions,
   disabled = false,
@@ -129,7 +127,7 @@ export function CollageControls({
               i
             </span>
             <p className="helper-text">
-              Each saved look keeps your collage size, spacing, background, and main photo size.
+              Each saved look keeps your collage size, spacing, background, and tile settings.
             </p>
           </div>
         </div>
@@ -137,20 +135,8 @@ export function CollageControls({
         <div className="field field-full collage-summary">
           <span>Quick summary</span>
           <p className="helper-text">
-            {usesBalancedLayout
-              ? 'A balanced layout'
-              : `${settings.columns} columns with ${settings.gap}px spacing`}{' '}
-            keeps {settings.fitMode === 'cover' ? 'photos filled edge to edge' : 'full photos visible'}
-            , with{' '}
-            {settings.featuredSpan === '1x1'
-              ? usesBalancedLayout
-                ? 'more natural shapes for smaller photo sets.'
-                : 'all photos the same size.'
-              : settings.featuredSpan === '2x2'
-                ? 'one large 2x2 main photo.'
-                : settings.featuredSpan === '2x1'
-                  ? 'one wide main photo.'
-                  : 'one tall main photo.'}
+            {settings.columns} columns with {settings.gap}px spacing keeps{' '}
+            {settings.fitMode === 'cover' ? 'photos filled edge to edge' : 'full photos visible'}.
           </p>
         </div>
 
@@ -199,27 +185,18 @@ export function CollageControls({
           </div>
         </fieldset>
 
-        {usesBalancedLayout ? (
-          <div className="field">
-            <span>Layout</span>
-            <p className="helper-text">
-              For 2 to 4 photos, the app uses a balanced layout automatically.
-            </p>
-          </div>
-        ) : (
-          <label className="field">
-            <span>Columns ({settings.columns})</span>
-            <input
-              type="range"
-              min="2"
-              max="5"
-              step="1"
-              value={settings.columns}
-              onChange={(event) => onChange('columns', Number(event.target.value))}
-              disabled={disabled}
-            />
-          </label>
-        )}
+        <label className="field">
+          <span>Columns ({settings.columns})</span>
+          <input
+            type="range"
+            min="2"
+            max="5"
+            step="1"
+            value={settings.columns}
+            onChange={(event) => onChange('columns', Number(event.target.value))}
+            disabled={disabled}
+          />
+        </label>
 
         <label className="field">
           <span>Spacing ({settings.gap}px)</span>
@@ -269,89 +246,12 @@ export function CollageControls({
           />
         </label>
 
-        <fieldset className="field field-full layout-choice-group">
-          <legend>Layout style</legend>
-          <div className="choice-cards">
-            <button
-              type="button"
-              className={`choice-card ${settings.featuredSpan === '1x1' ? 'is-active' : ''}`}
-              onClick={() => onChange('featuredSpan', '1x1')}
-              disabled={disabled}
-            >
-              <span className="layout-preview layout-preview-grid" aria-hidden="true">
-                <span />
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="choice-card-copy">
-                <strong>Normal</strong>
-                <span>All photos use the same square size.</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`choice-card ${settings.featuredSpan === '2x2' ? 'is-active' : ''}`}
-              onClick={() => onChange('featuredSpan', '2x2')}
-              disabled={disabled}
-            >
-              <span className="layout-preview layout-preview-2x2" aria-hidden="true">
-                <span className="is-main" />
-                <span />
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="choice-card-copy">
-                <strong>Large 2x2</strong>
-                <span>Main photo takes the space of 4 square tiles.</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`choice-card ${settings.featuredSpan === '2x1' ? 'is-active' : ''}`}
-              onClick={() => onChange('featuredSpan', '2x1')}
-              disabled={disabled}
-            >
-              <span className="layout-preview layout-preview-2x1" aria-hidden="true">
-                <span className="is-main" />
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="choice-card-copy">
-                <strong>Wide 2x1</strong>
-                <span>Main photo spans 2 tiles across.</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`choice-card ${settings.featuredSpan === '1x2' ? 'is-active' : ''}`}
-              onClick={() => onChange('featuredSpan', '1x2')}
-              disabled={disabled}
-            >
-              <span className="layout-preview layout-preview-1x2" aria-hidden="true">
-                <span className="is-main" />
-                <span />
-                <span />
-                <span />
-                <span />
-              </span>
-              <span className="choice-card-copy">
-                <strong>Tall 1x2</strong>
-                <span>Main photo spans 2 tiles tall.</span>
-              </span>
-            </button>
-          </div>
-          <div className="tip-note" role="note">
-            <span className="tip-note-icon" aria-hidden="true">
-              i
-            </span>
-            <p className="helper-text">
-              The first photo becomes the main photo whenever you choose a larger layout.
-            </p>
-          </div>
-        </fieldset>
+        <div className="field field-full collage-summary">
+          <span>Tile resizing</span>
+          <p className="helper-text">
+            Resize tiles directly in the preview. The rest of the collage will reflow automatically.
+          </p>
+        </div>
       </div>
     </section>
   );
