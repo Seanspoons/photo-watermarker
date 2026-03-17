@@ -438,6 +438,30 @@ select:disabled {
   background: rgba(255, 255, 255, 0.12);
 }
 
+.preview-empty-dropzone {
+  position: absolute;
+  border-radius: 14px;
+  border: 1px dashed rgba(217, 162, 77, 0.32);
+  background: rgba(217, 162, 77, 0.06);
+  pointer-events: auto;
+}
+
+.preview-empty-dropzone.is-hovered {
+  border-color: rgba(217, 162, 77, 0.82);
+  background: rgba(217, 162, 77, 0.14);
+}
+
+.preview-drag-footprint {
+  position: absolute;
+  border: 2px solid rgba(217, 162, 77, 0.96);
+  background: rgba(217, 162, 77, 0.14);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 248, 236, 0.75),
+    0 0 0 3px rgba(217, 162, 77, 0.14);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .preview-dropzone {
   position: absolute;
   display: grid;
@@ -448,6 +472,7 @@ select:disabled {
   color: transparent;
   pointer-events: auto;
   cursor: grab;
+  z-index: 2;
   transition:
     left 180ms ease,
     top 180ms ease,

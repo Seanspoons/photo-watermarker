@@ -120,6 +120,7 @@ export function CollageMaker() {
     colSpan: number;
     rowSpan: number;
   } | null>(null);
+  const [resizePreviewColumns, setResizePreviewColumns] = useState<number | null>(null);
   const [settings, setSettings] = useState<CollageSettings>(loadStoredCollageSettings);
   const [savedPresets, setSavedPresets] = useState<CollageSavedPreset[]>(loadStoredCollagePresets);
   const [presetName, setPresetName] = useState('');
@@ -178,13 +179,25 @@ export function CollageMaker() {
     };
   }, [settings]);
   const packedPreviewTiles = useMemo(
-    () => getCollagePackedTiles(previewTiles, settings, previewSize),
-    [previewTiles, settings, previewSize]
+    () =>
+      getCollagePackedTiles(
+        previewTiles,
+        settings,
+        previewSize,
+        resizePreviewColumns ?? undefined
+      ),
+    [previewTiles, previewSize, resizePreviewColumns, settings]
   );
   const layoutMetrics = useMemo(() => getCollageLayoutMetrics(tiles, settings), [tiles, settings]);
   const previewMetrics = useMemo(
-    () => getCollageLayoutMetrics(previewTiles, settings, previewSize),
-    [previewTiles, settings, previewSize]
+    () =>
+      getCollageLayoutMetrics(
+        previewTiles,
+        settings,
+        previewSize,
+        resizePreviewColumns ?? undefined
+      ),
+    [previewTiles, previewSize, resizePreviewColumns, settings]
   );
   const layoutAdvice = useMemo(() => {
     if (!canBuildCollage) {
@@ -502,17 +515,20 @@ export function CollageMaker() {
   };
 
   const handleResizePreview = (index: number, colSpan: number, rowSpan: number) => {
+    setResizePreviewColumns((current) => current ?? previewMetrics.columns);
     setResizePreview({ index, colSpan, rowSpan });
   };
 
   const handleResizeCommit = (index: number, colSpan: number, rowSpan: number) => {
     setResizePreview(null);
+    setResizePreviewColumns(null);
     handleResizeTile(index, colSpan, rowSpan);
     setStatusMessage(`Tile resized to ${colSpan} × ${rowSpan}.`);
   };
 
   const handleResizeCancel = () => {
     setResizePreview(null);
+    setResizePreviewColumns(null);
   };
 
   const reorderImages = (fromIndex: number, toIndex: number) => {
@@ -595,6 +611,43 @@ export function CollageMaker() {
     swapImages(draggedIndex, index);
     setSelectedImageIndex(index);
     setStatusMessage('Preview order updated.');
+    handleDragEnd();
+  };
+
+  const handlePreviewEmptyDrop = (column: number, row: number) => {
+    if (draggedIndex === null) {
+      handleDragEnd();
+      return;
+    }
+
+    const targetTile = packedPreviewTiles.find(
+      (tile) => tile.row > row || (tile.row === row && tile.column >= column)
+    );
+
+    setTiles((current) => {
+      if (draggedIndex < 0 || draggedIndex >= current.length) {
+        return current;
+      }
+
+      const nextTiles = [...current];
+      const [draggedTile] = nextTiles.splice(draggedIndex, 1);
+      if (!draggedTile) {
+        return current;
+      }
+
+      if (!targetTile) {
+        nextTiles.push(draggedTile);
+        return nextTiles;
+      }
+
+      const targetIndex = current.findIndex((tile) => tile.id === targetTile.id);
+      const insertionIndex = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
+      nextTiles.splice(insertionIndex, 0, draggedTile);
+      return nextTiles;
+    });
+
+    setSelectedImageIndex(draggedIndex);
+    setStatusMessage('Photo order updated.');
     handleDragEnd();
   };
 
@@ -690,6 +743,7 @@ export function CollageMaker() {
               onTileDragStart={handleDragStart}
               onTileDragEnter={handleDragEnter}
               onTileDrop={handlePreviewDrop}
+              onEmptySlotDrop={handlePreviewEmptyDrop}
               onTileDragEnd={handleDragEnd}
               onTileResizePreview={handleResizePreview}
               onTileResizeCommit={handleResizeCommit}

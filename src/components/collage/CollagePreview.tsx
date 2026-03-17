@@ -32,6 +32,7 @@ interface CollagePreviewProps {
   onTileDragStart?: (index: number) => void;
   onTileDragEnter?: (index: number) => void;
   onTileDrop?: (index: number) => void;
+  onEmptySlotDrop?: (column: number, row: number) => void;
   onTileDragEnd?: () => void;
   onTileResizePreview?: (index: number, colSpan: number, rowSpan: number) => void;
   onTileResizeCommit?: (index: number, colSpan: number, rowSpan: number) => void;
@@ -58,6 +59,7 @@ export function CollagePreview({
   onTileDragStart,
   onTileDragEnter,
   onTileDrop,
+  onEmptySlotDrop,
   onTileDragEnd,
   onTileResizePreview,
   onTileResizeCommit,
@@ -67,6 +69,7 @@ export function CollagePreview({
   const dragImageRef = useRef<HTMLImageElement | null>(null);
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [hoveredEmptySlot, setHoveredEmptySlot] = useState<{ column: number; row: number } | null>(null);
   const [activeResizePreview, setActiveResizePreview] = useState<{
     index: number;
     colSpan: number;
@@ -167,11 +170,20 @@ export function CollagePreview({
     const scaledGapY = gap * scaleY;
     const offsetX = ((canvas.width - previewMetrics.gridWidth) / 2) * scaleX;
     const offsetY = ((canvas.height - previewMetrics.gridHeight) / 2) * scaleY;
-    const guides: Array<{ x: number; y: number; width: number; height: number }> = [];
+    const guides: Array<{
+      column: number;
+      row: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }> = [];
 
     for (let row = 0; row < previewMetrics.frameRows; row += 1) {
       for (let column = 0; column < previewMetrics.columns; column += 1) {
         guides.push({
+          column,
+          row,
           x: offsetX + column * (stepWidth + scaledGapX),
           y: offsetY + row * (stepHeight + scaledGapY),
           width: stepWidth,
@@ -182,6 +194,19 @@ export function CollagePreview({
 
     return guides;
   }, [canvasRef, displaySize.height, displaySize.width, gap, previewMetrics]);
+
+  const emptyGridGuides = useMemo(() => {
+    const occupied = new Set<string>();
+    scaledCells.forEach((cell) => {
+      for (let rowOffset = 0; rowOffset < cell.rowSpan; rowOffset += 1) {
+        for (let columnOffset = 0; columnOffset < cell.colSpan; columnOffset += 1) {
+          occupied.add(`${cell.column + columnOffset}:${cell.row + rowOffset}`);
+        }
+      }
+    });
+
+    return scaledGridGuides.filter((guide) => !occupied.has(`${guide.column}:${guide.row}`));
+  }, [scaledCells, scaledGridGuides]);
 
   const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
     event.dataTransfer.effectAllowed = 'move';
@@ -208,6 +233,7 @@ export function CollagePreview({
       event.dataTransfer.setDragImage(dragImage, 48, 48);
     }
 
+    setHoveredEmptySlot(null);
     onTileDragStart?.(index);
   };
 
@@ -217,7 +243,65 @@ export function CollagePreview({
       dragImageRef.current = null;
     }
 
+    setHoveredEmptySlot(null);
     onTileDragEnd?.();
+  };
+
+  const draggedPreviewRect = useMemo(() => {
+    if (draggedIndex === null || !previewMetrics) {
+      return null;
+    }
+
+    const draggedCell = scaledCells.find((cell) => cell.index === draggedIndex);
+    if (!draggedCell) {
+      return null;
+    }
+
+    const anchor =
+      hoveredEmptySlot ??
+      scaledCells.find((cell) => cell.index === dropTargetIndex) ??
+      null;
+
+    if (!anchor) {
+      return null;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return null;
+    }
+
+    const scaleX = displaySize.width / canvas.width;
+    const scaleY = displaySize.height / canvas.height;
+    const cellWidth = previewMetrics.cellSize * scaleX;
+    const cellHeight = previewMetrics.cellSize * scaleY;
+    const scaledGapX = gap * scaleX;
+    const scaledGapY = gap * scaleY;
+    const offsetX = ((canvas.width - previewMetrics.gridWidth) / 2) * scaleX;
+    const offsetY = ((canvas.height - previewMetrics.gridHeight) / 2) * scaleY;
+
+    return {
+      x: offsetX + anchor.column * (cellWidth + scaledGapX),
+      y: offsetY + anchor.row * (cellHeight + scaledGapY),
+      width: cellWidth * draggedCell.colSpan + scaledGapX * (draggedCell.colSpan - 1),
+      height: cellHeight * draggedCell.rowSpan + scaledGapY * (draggedCell.rowSpan - 1),
+      borderRadius: draggedCell.borderRadius
+    };
+  }, [
+    canvasRef,
+    displaySize.height,
+    displaySize.width,
+    draggedIndex,
+    dropTargetIndex,
+    gap,
+    hoveredEmptySlot,
+    previewMetrics,
+    scaledCells
+  ]);
+
+  const handleEmptySlotDrop = (column: number, row: number) => {
+    setHoveredEmptySlot(null);
+    onEmptySlotDrop?.(column, row);
   };
 
   const handleResizeStart = (
@@ -382,6 +466,42 @@ export function CollagePreview({
                       }}
                     />
                   ))}
+                  {draggedIndex !== null
+                    ? emptyGridGuides.map((guide) => (
+                        <button
+                          key={`empty-${guide.column}-${guide.row}`}
+                          type="button"
+                          className={`preview-empty-dropzone ${
+                            hoveredEmptySlot?.column === guide.column &&
+                            hoveredEmptySlot?.row === guide.row
+                              ? 'is-hovered'
+                              : ''
+                          }`}
+                          style={{
+                            left: `${guide.x}px`,
+                            top: `${guide.y}px`,
+                            width: `${guide.width}px`,
+                            height: `${guide.height}px`
+                          }}
+                          tabIndex={-1}
+                          onDragEnter={() => setHoveredEmptySlot({ column: guide.column, row: guide.row })}
+                          onDragOver={(event) => event.preventDefault()}
+                          onDrop={() => handleEmptySlotDrop(guide.column, guide.row)}
+                        />
+                      ))
+                    : null}
+                  {draggedPreviewRect ? (
+                    <span
+                      className="preview-drag-footprint"
+                      style={{
+                        left: `${draggedPreviewRect.x}px`,
+                        top: `${draggedPreviewRect.y}px`,
+                        width: `${draggedPreviewRect.width}px`,
+                        height: `${draggedPreviewRect.height}px`,
+                        borderRadius: `${draggedPreviewRect.borderRadius}px`
+                      }}
+                    />
+                  ) : null}
                   {scaledCells.map((cell, index) => (
                     <button
                       key={`${cell.x}-${cell.y}-${index}`}
@@ -410,7 +530,10 @@ export function CollagePreview({
                       tabIndex={-1}
                       onClick={() => onTileSelect?.(index)}
                       onDragStart={(event) => handleTileDragStart(event, index)}
-                      onDragEnter={() => onTileDragEnter?.(index)}
+                      onDragEnter={() => {
+                        setHoveredEmptySlot(null);
+                        onTileDragEnter?.(index);
+                      }}
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={() => onTileDrop?.(index)}
                       onDragEnd={handleTileDragEnd}

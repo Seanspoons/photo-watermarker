@@ -203,7 +203,8 @@ function chooseFrameRows(columns: number, packedRows: number, outputSize: Canvas
 function getPackedTiles(
   tiles: CollageTile[],
   outputSize: CanvasSize,
-  settings: CollageSettings
+  settings: CollageSettings,
+  columnOverride?: number
 ): { tiles: CollagePackedTile[]; metrics: CollageLayoutMetrics } {
   if (tiles.length === 0) {
     return {
@@ -224,7 +225,10 @@ function getPackedTiles(
   const targetAspect = outputSize.width / outputSize.height;
   const isSquareOutput = Math.abs(targetAspect - 1) < 0.01;
 
-  let safeColumns = chooseColumnCount(tiles, settings, outputSize);
+  let safeColumns =
+    columnOverride !== undefined
+      ? clamp(columnOverride, 2, 6)
+      : chooseColumnCount(tiles, settings, outputSize);
   let { placements, rows } = packTiles(tiles, safeColumns);
   let frameColumns = safeColumns;
   let frameRows = chooseFrameRows(safeColumns, rows, outputSize);
@@ -368,28 +372,31 @@ export function getCollageOutputSize(settings: CollageSettings): CanvasSize {
 export function getCollageLayoutMetrics(
   tiles: CollageTile[],
   settings: CollageSettings,
-  sizeOverride?: CanvasSize
+  sizeOverride?: CanvasSize,
+  columnOverride?: number
 ): CollageLayoutMetrics {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getPackedTiles(tiles, outputSize, settings).metrics;
+  return getPackedTiles(tiles, outputSize, settings, columnOverride).metrics;
 }
 
 export function getCollageLayoutCells(
   tiles: CollageTile[],
   settings: CollageSettings,
-  sizeOverride?: CanvasSize
+  sizeOverride?: CanvasSize,
+  columnOverride?: number
 ): CollageLayoutCell[] {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getPackedTiles(tiles, outputSize, settings).tiles;
+  return getPackedTiles(tiles, outputSize, settings, columnOverride).tiles;
 }
 
 export function getCollagePackedTiles(
   tiles: CollageTile[],
   settings: CollageSettings,
-  sizeOverride?: CanvasSize
+  sizeOverride?: CanvasSize,
+  columnOverride?: number
 ): CollagePackedTile[] {
   const outputSize = sizeOverride ?? getOutputSize(settings);
-  return getPackedTiles(tiles, outputSize, settings).tiles;
+  return getPackedTiles(tiles, outputSize, settings, columnOverride).tiles;
 }
 
 export function getCollageLayoutFrame(
