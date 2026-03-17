@@ -891,6 +891,7 @@ export function CollageMaker() {
             <CollagePreview
               stepLabel="Step 3"
               title="Arrange"
+              panelClassName="collage-arrange-panel"
               canvasRef={previewCanvasRef}
               hasImages={tiles.length > 0}
               imageCount={tiles.length}

@@ -17,6 +17,7 @@ import {
 interface CollagePreviewProps {
   stepLabel?: string;
   title?: string;
+  panelClassName?: string;
   canvasRef: RefObject<HTMLCanvasElement>;
   hasImages: boolean;
   imageCount: number;
@@ -49,6 +50,7 @@ interface CollagePreviewProps {
 export function CollagePreview({
   stepLabel = 'Step 3',
   title = 'Preview',
+  panelClassName,
   canvasRef,
   hasImages,
   imageCount,
@@ -612,7 +614,7 @@ export function CollagePreview({
   };
 
   return (
-    <section className="panel preview-panel">
+    <section className={`panel preview-panel ${panelClassName ?? ''}`.trim()}>
       <div className="panel-heading">
         <div>
           <p className="eyebrow">{stepLabel}</p>
