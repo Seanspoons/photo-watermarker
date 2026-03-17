@@ -122,7 +122,7 @@ export function CollageMaker() {
   const [canNativeShare, setCanNativeShare] = useState(false);
   const [hasLoadedDraft, setHasLoadedDraft] = useState(false);
   const [confirmAction, setConfirmAction] = useState<CollageConfirmAction>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [canPreviewDrag, setCanPreviewDrag] = useState(false);
@@ -322,7 +322,11 @@ export function CollageMaker() {
   useEffect(() => {
     setSelectedImageIndex((current) => {
       if (images.length === 0) {
-        return 0;
+        return null;
+      }
+
+      if (current === null) {
+        return null;
       }
 
       return Math.min(current, images.length - 1);
@@ -450,6 +454,7 @@ export function CollageMaker() {
     void clearCollageDraft();
     setErrorMessage(null);
     setStatusMessage('Ready for a new collage.');
+    setSelectedImageIndex(null);
     setConfirmAction(null);
   };
 
@@ -468,7 +473,13 @@ export function CollageMaker() {
 
       return nextImages;
     });
-    setSelectedImageIndex((current) => Math.max(0, Math.min(current, images.length - 2)));
+    setSelectedImageIndex((current) => {
+      if (current === null) {
+        return null;
+      }
+
+      return Math.max(0, Math.min(current, images.length - 2));
+    });
     setStatusMessage('Photo removed.');
   };
 
@@ -536,6 +547,9 @@ export function CollageMaker() {
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDropTargetIndex(null);
+    if (canPreviewDrag) {
+      setSelectedImageIndex(null);
+    }
   };
 
   const handleDrop = (index: number) => {
@@ -646,7 +660,7 @@ export function CollageMaker() {
               previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
               previewImageUrls={images.map((image) => image.objectUrl)}
               isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
-              selectedIndex={selectedImageIndex}
+              selectedIndex={selectedImageIndex ?? undefined}
               draggedIndex={draggedIndex}
               dropTargetIndex={dropTargetIndex}
               onTileSelect={setSelectedImageIndex}
@@ -753,7 +767,7 @@ export function CollageMaker() {
                     </div>
                   ))}
                 </div>
-                {!canPreviewDrag && images[selectedImageIndex] ? (
+                {!canPreviewDrag && selectedImageIndex !== null && images[selectedImageIndex] ? (
                   <div className="mobile-photo-toolbar" aria-live="polite">
                     <p className="mobile-photo-toolbar-title">
                       {images[selectedImageIndex].name}
