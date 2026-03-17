@@ -99,6 +99,7 @@ export function CollagePreview({
 }: CollagePreviewProps) {
   const shellRef = useRef<HTMLDivElement>(null);
   const dragImageRef = useRef<HTMLImageElement | null>(null);
+  const activeDragIndexRef = useRef<number | null>(null);
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [hoveredEmptySlot, setHoveredEmptySlot] = useState<{ column: number; row: number } | null>(null);
@@ -377,6 +378,7 @@ export function CollagePreview({
       : { column: 0, row: 0 };
 
     setHoveredEmptySlot(null);
+    activeDragIndexRef.current = index;
     onTileDragStart?.(index);
   };
 
@@ -388,6 +390,7 @@ export function CollagePreview({
 
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
+    activeDragIndexRef.current = null;
     onTileDragEnd?.();
   };
 
@@ -522,6 +525,7 @@ export function CollagePreview({
           row: Math.max(0, Math.min(cell.rowSpan - 1, guideCell.row - cell.row))
         }
       : { column: 0, row: 0 };
+    activeDragIndexRef.current = index;
     touchDragStateRef.current = { index, pointerId: event.pointerId };
     setHoveredEmptySlot(null);
     onTileSelect?.(index);
@@ -583,6 +587,7 @@ export function CollagePreview({
     setHoveredIndex(null);
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
+    activeDragIndexRef.current = null;
   };
 
   const handleTouchDragCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -599,6 +604,7 @@ export function CollagePreview({
     setHoveredIndex(null);
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
+    activeDragIndexRef.current = null;
     onTileDragEnd?.();
   };
 
@@ -815,7 +821,14 @@ export function CollagePreview({
                           tabIndex={-1}
                           onDragEnter={() => setHoveredEmptySlot({ column: guide.column, row: guide.row })}
                           onDragOver={(event) => event.preventDefault()}
-                          onDrop={() => draggedIndex !== null && handleEmptySlotDrop(draggedIndex, guide.column, guide.row)}
+                          onDrop={() =>
+                            activeDragIndexRef.current !== null &&
+                            handleEmptySlotDrop(
+                              activeDragIndexRef.current,
+                              guide.column,
+                              guide.row
+                            )
+                          }
                         />
                       ))
                     : null}
@@ -872,9 +885,9 @@ export function CollagePreview({
                       }}
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={() =>
-                        draggedIndex !== null &&
+                        activeDragIndexRef.current !== null &&
                         handleEmptySlotDrop(
-                          draggedIndex,
+                          activeDragIndexRef.current,
                           cell.column,
                           cell.row,
                           cell.colSpan,
