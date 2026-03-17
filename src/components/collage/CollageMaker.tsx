@@ -415,6 +415,32 @@ export function CollageMaker() {
     key: K,
     value: CollageSettings[K]
   ) => {
+    if (key === 'columns') {
+      const nextColumns = value as number;
+
+      setTiles((current) => {
+        const anchoredTiles = anchorTilesToCurrentLayout(current);
+        return anchoredTiles.map((tile) => {
+          if (tile.gridColumn === null || tile.gridRow === null) {
+            return tile;
+          }
+
+          if (tile.gridColumn + tile.colSpan <= nextColumns) {
+            return tile;
+          }
+
+          return {
+            ...tile,
+            gridColumn: null,
+            gridRow: null
+          };
+        });
+      });
+      setSettings((current) => ({ ...current, [key]: value }));
+      setStatusMessage(`Set the grid to ${nextColumns} columns.`);
+      return;
+    }
+
     setSettings((current) => ({ ...current, [key]: value }));
   };
 
