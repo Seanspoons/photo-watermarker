@@ -235,12 +235,8 @@ function getPackedTiles(
   let frameRows = chooseFrameRows(safeColumns, rows, outputSize);
 
   if (isSquareOutput) {
-    frameColumns = Math.max(safeColumns, rows);
-    const repacked = packTiles(tiles, frameColumns);
-    placements = repacked.placements;
-    rows = repacked.rows;
+    frameColumns = safeColumns;
     frameRows = Math.max(frameColumns, rows);
-    safeColumns = frameColumns;
   }
 
   const cellSize = Math.min(
