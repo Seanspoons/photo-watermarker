@@ -147,6 +147,7 @@ export function CollageMaker() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [canPreviewDrag, setCanPreviewDrag] = useState(false);
+  const [canTouchPreviewMove, setCanTouchPreviewMove] = useState(false);
   const imagesRef = useRef<CollageTile[]>([]);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -246,7 +247,9 @@ export function CollageMaker() {
   }, [canBuildCollage, layoutMetrics]);
   const previewHelperText = canPreviewDrag
     ? 'Drag a tile to reorder it. Drag a handle to make it bigger or smaller.'
-    : 'Use the photo actions below to reorder or resize a selected tile.';
+    : canTouchPreviewMove
+      ? 'Drag a tile in the preview to move it. Use the size buttons below the preview for quick resizing.'
+      : 'Use the photo actions below to reorder or resize a selected tile.';
 
   useEffect(() => {
     setCanNativeShare('share' in navigator && 'canShare' in navigator);
@@ -257,13 +260,19 @@ export function CollageMaker() {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(min-width: 921px) and (pointer: fine)');
-    const updateInteractivePreview = () => setCanPreviewDrag(mediaQuery.matches);
+    const desktopMediaQuery = window.matchMedia('(min-width: 921px) and (pointer: fine)');
+    const touchMediaQuery = window.matchMedia('(pointer: coarse)');
+    const updateInteractivePreview = () => {
+      setCanPreviewDrag(desktopMediaQuery.matches);
+      setCanTouchPreviewMove(touchMediaQuery.matches);
+    };
     updateInteractivePreview();
-    mediaQuery.addEventListener('change', updateInteractivePreview);
+    desktopMediaQuery.addEventListener('change', updateInteractivePreview);
+    touchMediaQuery.addEventListener('change', updateInteractivePreview);
 
     return () => {
-      mediaQuery.removeEventListener('change', updateInteractivePreview);
+      desktopMediaQuery.removeEventListener('change', updateInteractivePreview);
+      touchMediaQuery.removeEventListener('change', updateInteractivePreview);
     };
   }, []);
 
@@ -602,6 +611,99 @@ export function CollageMaker() {
     setResizeHitMaxColumns(false);
   };
 
+  const renderSelectedTileActions = (compact = false) => {
+    if (selectedImageIndex === null || !tiles[selectedImageIndex]) {
+      return null;
+    }
+
+    return (
+      <div
+        className={`mobile-photo-toolbar ${compact ? 'preview-mobile-toolbar' : ''}`}
+        aria-live="polite"
+      >
+        <p className="mobile-photo-toolbar-title">{tiles[selectedImageIndex].name}</p>
+        <p className="helper-text">
+          Current size: {tiles[selectedImageIndex].colSpan} × {tiles[selectedImageIndex].rowSpan}
+        </p>
+        <div className="mobile-photo-toolbar-actions">
+          <button
+            type="button"
+            className="thumb-inline-button"
+            onClick={() => handleResizeTile(selectedImageIndex, 1, 1)}
+            disabled={isBusy}
+          >
+            1×1
+          </button>
+          <button
+            type="button"
+            className="thumb-inline-button"
+            onClick={() => handleResizeTile(selectedImageIndex, 2, 1)}
+            disabled={isBusy}
+          >
+            2×1
+          </button>
+          <button
+            type="button"
+            className="thumb-inline-button"
+            onClick={() => handleResizeTile(selectedImageIndex, 1, 2)}
+            disabled={isBusy}
+          >
+            1×2
+          </button>
+          <button
+            type="button"
+            className="thumb-inline-button"
+            onClick={() => handleResizeTile(selectedImageIndex, 2, 2)}
+            disabled={isBusy}
+          >
+            2×2
+          </button>
+        </div>
+        {!canPreviewDrag ? (
+          <div className="mobile-photo-toolbar-actions">
+            {!canTouchPreviewMove ? (
+              <>
+                <button
+                  type="button"
+                  className="thumb-inline-button"
+                  onClick={() => handleMoveImage(selectedImageIndex, -1)}
+                  disabled={selectedImageIndex === 0 || isBusy}
+                >
+                  Move Up
+                </button>
+                <button
+                  type="button"
+                  className="thumb-inline-button"
+                  onClick={() => handleMoveImage(selectedImageIndex, 1)}
+                  disabled={selectedImageIndex === tiles.length - 1 || isBusy}
+                >
+                  Move Down
+                </button>
+              </>
+            ) : null}
+            <button
+              type="button"
+              className="thumb-inline-button is-danger"
+              onClick={() => handleRemoveImage(selectedImageIndex)}
+              disabled={isBusy}
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="thumb-inline-button is-danger"
+            onClick={() => handleRemoveImage(selectedImageIndex)}
+            disabled={isBusy}
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    );
+  };
+
   const anchorTilesToCurrentLayout = (currentTiles: CollageTile[]) => {
     const packedById = new Map(
       packedPreviewTiles.map((tile) => [tile.id, { column: tile.column, row: tile.row }])
@@ -838,9 +940,11 @@ export function CollageMaker() {
               previewCells={packedPreviewTiles}
               previewMetrics={previewMetrics}
               gap={settings.gap}
+              backgroundColor={settings.backgroundColor}
               previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
               previewImageUrls={tiles.map((tile) => tile.objectUrl)}
-              isInteractive={canPreviewDrag && canBuildCollage && !isBusy}
+              isInteractive={(canPreviewDrag || canTouchPreviewMove) && canBuildCollage && !isBusy}
+              allowTouchMove={canTouchPreviewMove && canBuildCollage && !isBusy}
               selectedIndex={selectedImageIndex ?? undefined}
               draggedIndex={draggedIndex}
               dropTargetIndex={dropTargetIndex}
@@ -854,6 +958,7 @@ export function CollageMaker() {
               onTileResizeCommit={handleResizeCommit}
               onTileResizeCancel={handleResizeCancel}
             />
+            {!canPreviewDrag && canTouchPreviewMove ? renderSelectedTileActions(true) : null}
           </div>
         </div>
 
@@ -934,88 +1039,7 @@ export function CollageMaker() {
                     </div>
                   ))}
                 </div>
-                {selectedImageIndex !== null && tiles[selectedImageIndex] ? (
-                  <div className="mobile-photo-toolbar" aria-live="polite">
-                    <p className="mobile-photo-toolbar-title">
-                      {tiles[selectedImageIndex].name}
-                    </p>
-                    <p className="helper-text">
-                      Current size: {tiles[selectedImageIndex].colSpan} ×{' '}
-                      {tiles[selectedImageIndex].rowSpan}
-                    </p>
-                    <div className="mobile-photo-toolbar-actions">
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleResizeTile(selectedImageIndex, 1, 1)}
-                        disabled={isBusy}
-                      >
-                        1×1
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleResizeTile(selectedImageIndex, 2, 1)}
-                        disabled={isBusy}
-                      >
-                        2×1
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleResizeTile(selectedImageIndex, 1, 2)}
-                        disabled={isBusy}
-                      >
-                        1×2
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleResizeTile(selectedImageIndex, 2, 2)}
-                        disabled={isBusy}
-                      >
-                        2×2
-                      </button>
-                    </div>
-                    {!canPreviewDrag ? (
-                      <div className="mobile-photo-toolbar-actions">
-                        <button
-                          type="button"
-                          className="thumb-inline-button"
-                          onClick={() => handleMoveImage(selectedImageIndex, -1)}
-                          disabled={selectedImageIndex === 0 || isBusy}
-                        >
-                          Move Up
-                        </button>
-                        <button
-                          type="button"
-                          className="thumb-inline-button"
-                          onClick={() => handleMoveImage(selectedImageIndex, 1)}
-                          disabled={selectedImageIndex === tiles.length - 1 || isBusy}
-                        >
-                          Move Down
-                        </button>
-                        <button
-                          type="button"
-                          className="thumb-inline-button is-danger"
-                          onClick={() => handleRemoveImage(selectedImageIndex)}
-                          disabled={isBusy}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="thumb-inline-button is-danger"
-                        onClick={() => handleRemoveImage(selectedImageIndex)}
-                        disabled={isBusy}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ) : null}
+                {!canTouchPreviewMove ? renderSelectedTileActions(false) : null}
               </>
             ) : (
               <p className="helper-text panel-description">Add a few photos and they will appear here.</p>

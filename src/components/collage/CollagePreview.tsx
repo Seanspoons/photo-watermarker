@@ -23,9 +23,11 @@ interface CollagePreviewProps {
   previewCells?: CollagePackedTile[];
   previewMetrics?: CollageLayoutMetrics | null;
   gap?: number;
+  backgroundColor?: string;
   previewCornerRadius?: number;
   previewImageUrls?: string[];
   isInteractive?: boolean;
+  allowTouchMove?: boolean;
   selectedIndex?: number;
   draggedIndex?: number | null;
   dropTargetIndex?: number | null;
@@ -50,9 +52,11 @@ export function CollagePreview({
   previewCells = [],
   previewMetrics = null,
   gap = 0,
+  backgroundColor = '#ffffff',
   previewCornerRadius = 0,
   previewImageUrls = [],
   isInteractive = false,
+  allowTouchMove = false,
   selectedIndex = 0,
   draggedIndex = null,
   dropTargetIndex = null,
@@ -87,6 +91,10 @@ export function CollagePreview({
     nextColSpan: number;
     nextRowSpan: number;
     maxColSpan: number;
+  } | null>(null);
+  const touchDragStateRef = useRef<{
+    index: number;
+    pointerId: number;
   } | null>(null);
 
   useEffect(() => {
@@ -211,6 +219,52 @@ export function CollagePreview({
     return scaledGridGuides.filter((guide) => !occupied.has(`${guide.column}:${guide.row}`));
   }, [scaledCells, scaledGridGuides]);
 
+  const guideAppearance = useMemo(() => {
+    const normalizedColor = backgroundColor.trim().toLowerCase();
+    const hex = normalizedColor.startsWith('#') ? normalizedColor.slice(1) : normalizedColor;
+    const expandedHex =
+      hex.length === 3
+        ? hex
+            .split('')
+            .map((value) => `${value}${value}`)
+            .join('')
+        : hex;
+
+    if (!/^[0-9a-f]{6}$/i.test(expandedHex)) {
+      return {
+        guideBorder: 'rgba(31, 59, 45, 0.12)',
+        guideFill: 'rgba(255, 255, 255, 0.12)',
+        emptyBorder: 'rgba(217, 162, 77, 0.32)',
+        emptyFill: 'rgba(217, 162, 77, 0.06)',
+        emptyHoverBorder: 'rgba(217, 162, 77, 0.82)',
+        emptyHoverFill: 'rgba(217, 162, 77, 0.14)'
+      };
+    }
+
+    const red = parseInt(expandedHex.slice(0, 2), 16);
+    const green = parseInt(expandedHex.slice(2, 4), 16);
+    const blue = parseInt(expandedHex.slice(4, 6), 16);
+    const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
+
+    return luminance < 0.45
+      ? {
+          guideBorder: 'rgba(255, 255, 255, 0.32)',
+          guideFill: 'rgba(255, 255, 255, 0.08)',
+          emptyBorder: 'rgba(255, 243, 214, 0.72)',
+          emptyFill: 'rgba(255, 243, 214, 0.14)',
+          emptyHoverBorder: 'rgba(255, 243, 214, 0.96)',
+          emptyHoverFill: 'rgba(255, 243, 214, 0.24)'
+        }
+      : {
+          guideBorder: 'rgba(31, 59, 45, 0.12)',
+          guideFill: 'rgba(255, 255, 255, 0.12)',
+          emptyBorder: 'rgba(217, 162, 77, 0.32)',
+          emptyFill: 'rgba(217, 162, 77, 0.06)',
+          emptyHoverBorder: 'rgba(217, 162, 77, 0.82)',
+          emptyHoverFill: 'rgba(217, 162, 77, 0.14)'
+        };
+  }, [backgroundColor]);
+
   const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(index));
@@ -305,6 +359,120 @@ export function CollagePreview({
   const handleEmptySlotDrop = (column: number, row: number) => {
     setHoveredEmptySlot(null);
     onEmptySlotDrop?.(column, row);
+  };
+
+  const getPointerDropTarget = (clientX: number, clientY: number) => {
+    const shellRect = shellRef.current?.getBoundingClientRect();
+    if (!shellRect) {
+      return null;
+    }
+
+    const relativeX = clientX - shellRect.left;
+    const relativeY = clientY - shellRect.top;
+
+    const cellTarget = scaledCells.find(
+      (cell) =>
+        relativeX >= cell.x &&
+        relativeX <= cell.x + cell.width &&
+        relativeY >= cell.y &&
+        relativeY <= cell.y + cell.height
+    );
+
+    if (cellTarget) {
+      return { type: 'cell' as const, index: cellTarget.index };
+    }
+
+    const emptyTarget = emptyGridGuides.find(
+      (guide) =>
+        relativeX >= guide.x &&
+        relativeX <= guide.x + guide.width &&
+        relativeY >= guide.y &&
+        relativeY <= guide.y + guide.height
+    );
+
+    if (emptyTarget) {
+      return { type: 'empty' as const, column: emptyTarget.column, row: emptyTarget.row };
+    }
+
+    return null;
+  };
+
+  const handleTouchDragStart = (event: ReactPointerEvent<HTMLButtonElement>, index: number) => {
+    if (!allowTouchMove || event.pointerType === 'mouse') {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    touchDragStateRef.current = { index, pointerId: event.pointerId };
+    setHoveredEmptySlot(null);
+    onTileSelect?.(index);
+    onTileDragStart?.(index);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleTouchDragMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const touchState = touchDragStateRef.current;
+    if (!touchState || touchState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const target = getPointerDropTarget(event.clientX, event.clientY);
+    if (!target) {
+      setHoveredIndex(null);
+      setHoveredEmptySlot(null);
+      return;
+    }
+
+    if (target.type === 'cell') {
+      setHoveredEmptySlot(null);
+      setHoveredIndex(target.index);
+      onTileDragEnter?.(target.index);
+      return;
+    }
+
+    setHoveredIndex(null);
+    setHoveredEmptySlot({ column: target.column, row: target.row });
+  };
+
+  const handleTouchDragEnd = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const touchState = touchDragStateRef.current;
+    if (!touchState || touchState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const target = getPointerDropTarget(event.clientX, event.clientY);
+    if (event.pointerId === touchState.pointerId) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (target?.type === 'cell') {
+      onTileDrop?.(target.index);
+    } else if (target?.type === 'empty') {
+      handleEmptySlotDrop(target.column, target.row);
+    } else {
+      onTileDragEnd?.();
+    }
+
+    touchDragStateRef.current = null;
+    setHoveredIndex(null);
+    setHoveredEmptySlot(null);
+  };
+
+  const handleTouchDragCancel = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const touchState = touchDragStateRef.current;
+    if (!touchState || touchState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (event.pointerId === touchState.pointerId) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    touchDragStateRef.current = null;
+    setHoveredIndex(null);
+    setHoveredEmptySlot(null);
+    onTileDragEnd?.();
   };
 
   const handleResizeStart = (
@@ -466,7 +634,9 @@ export function CollagePreview({
                         top: `${guide.y}px`,
                         width: `${guide.width}px`,
                         height: `${guide.height}px`,
-                        borderRadius: `${guide.borderRadius}px`
+                        borderRadius: `${guide.borderRadius}px`,
+                        borderColor: guideAppearance.guideBorder,
+                        background: guideAppearance.guideFill
                       }}
                     />
                   ))}
@@ -486,7 +656,17 @@ export function CollagePreview({
                             top: `${guide.y}px`,
                             width: `${guide.width}px`,
                             height: `${guide.height}px`,
-                            borderRadius: `${guide.borderRadius}px`
+                            borderRadius: `${guide.borderRadius}px`,
+                            borderColor:
+                              hoveredEmptySlot?.column === guide.column &&
+                              hoveredEmptySlot?.row === guide.row
+                                ? guideAppearance.emptyHoverBorder
+                                : guideAppearance.emptyBorder,
+                            background:
+                              hoveredEmptySlot?.column === guide.column &&
+                              hoveredEmptySlot?.row === guide.row
+                                ? guideAppearance.emptyHoverFill
+                                : guideAppearance.emptyFill
                           }}
                           tabIndex={-1}
                           onDragEnter={() => setHoveredEmptySlot({ column: guide.column, row: guide.row })}
@@ -531,7 +711,7 @@ export function CollagePreview({
                         height: `${cell.height}px`,
                         borderRadius: `${cell.borderRadius}px`
                       }}
-                      draggable
+                      draggable={isInteractive && !allowTouchMove}
                       tabIndex={-1}
                       onClick={() => onTileSelect?.(index)}
                       onDragStart={(event) => handleTileDragStart(event, index)}
@@ -542,6 +722,10 @@ export function CollagePreview({
                       onDragOver={(event) => event.preventDefault()}
                       onDrop={() => onTileDrop?.(index)}
                       onDragEnd={handleTileDragEnd}
+                      onPointerDown={(event) => handleTouchDragStart(event, index)}
+                      onPointerMove={handleTouchDragMove}
+                      onPointerUp={handleTouchDragEnd}
+                      onPointerCancel={handleTouchDragCancel}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
@@ -550,36 +734,40 @@ export function CollagePreview({
                           ? `${activeResizePreview.colSpan} × ${activeResizePreview.rowSpan}`
                           : 'Drag to move'}
                       </span>
-                      <button
-                        type="button"
-                        className="preview-resize-handle preview-resize-handle-right"
-                        aria-label="Resize wider"
-                        tabIndex={-1}
-                        onPointerDown={(event) => handleResizeStart(event, cell, 'right')}
-                        onPointerMove={handleResizeMove}
-                        onPointerUp={handleResizeEnd}
-                        onPointerCancel={handleResizeCancel}
-                      />
-                      <button
-                        type="button"
-                        className="preview-resize-handle preview-resize-handle-bottom"
-                        aria-label="Resize taller"
-                        tabIndex={-1}
-                        onPointerDown={(event) => handleResizeStart(event, cell, 'bottom')}
-                        onPointerMove={handleResizeMove}
-                        onPointerUp={handleResizeEnd}
-                        onPointerCancel={handleResizeCancel}
-                      />
-                      <button
-                        type="button"
-                        className="preview-resize-handle preview-resize-handle-corner"
-                        aria-label="Resize larger"
-                        tabIndex={-1}
-                        onPointerDown={(event) => handleResizeStart(event, cell, 'corner')}
-                        onPointerMove={handleResizeMove}
-                        onPointerUp={handleResizeEnd}
-                        onPointerCancel={handleResizeCancel}
-                      />
+                      {!allowTouchMove ? (
+                        <>
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-right"
+                            aria-label="Resize wider"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'right')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-bottom"
+                            aria-label="Resize taller"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'bottom')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-corner"
+                            aria-label="Resize larger"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'corner')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                        </>
+                      ) : null}
                     </button>
                   ))}
                 </div>
