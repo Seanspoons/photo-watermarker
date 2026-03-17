@@ -654,6 +654,22 @@ select:disabled {
   gap: 8px;
 }
 
+.arrange-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  max-width: 240px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #faf8f3;
+  color: var(--accent-soft);
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .preview-controls-region {
   display: grid;
   gap: 12px;
@@ -1721,10 +1737,16 @@ select:disabled {
 
   .arrange-header-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .arrange-header-actions > * {
     flex: 1 1 0;
+  }
+
+  .arrange-selected-chip {
+    max-width: none;
+    width: 100%;
   }
 
   .panel-heading-actions {

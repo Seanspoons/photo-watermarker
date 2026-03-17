@@ -1273,6 +1273,11 @@ export function CollageMaker() {
 
   const arrangeHeaderActions = (
     <div className="arrange-header-actions">
+      {selectedImageIndex !== null && tiles[selectedImageIndex] ? (
+        <span className="arrange-selected-chip" aria-live="polite">
+          Selected: {tiles[selectedImageIndex].name}
+        </span>
+      ) : null}
       <button
         type="button"
         className="ghost-button"
