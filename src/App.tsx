@@ -8,39 +8,51 @@ interface ToolCard {
   path: AppRoute;
   name: string;
   description: string;
+  blurb: string;
   status: 'live' | 'soon';
+  icon: 'watermarker' | 'collage' | 'resize' | 'compress' | 'border';
 }
 
 const TOOL_CARDS: ToolCard[] = [
   {
     path: '/watermarker',
     name: 'Photo Watermarker',
-    description: 'Add a text or logo watermark, or make a proof-style preview image.',
-    status: 'live'
+    description: 'Add a text or logo watermark to a photo.',
+    blurb: 'Great for artists, creators, and proof images.',
+    status: 'live',
+    icon: 'watermarker'
   },
   {
     path: '/collage',
     name: 'Collage Maker',
-    description: 'Arrange multiple photos into one image with a simple grid-based editor.',
-    status: 'live'
+    description: 'Combine multiple photos into one image.',
+    blurb: 'Arrange, resize, and save a clean collage.',
+    status: 'live',
+    icon: 'collage'
   },
   {
     path: '/resize',
     name: 'Photo Resizer',
-    description: 'Resize images for social posts, websites, and quick sharing.',
-    status: 'soon'
+    description: 'Resize photos for sharing and social posts.',
+    blurb: 'Useful for Instagram, websites, and email.',
+    status: 'soon',
+    icon: 'resize'
   },
   {
     path: '/compress',
     name: 'Image Compressor',
-    description: 'Shrink image file sizes while keeping them looking clean.',
-    status: 'soon'
+    description: 'Make image files smaller without extra hassle.',
+    blurb: 'Helpful when photos are too large to send or upload.',
+    status: 'soon',
+    icon: 'compress'
   },
   {
     path: '/border',
     name: 'Border Maker',
-    description: 'Add clean padding or a simple border around your photos.',
-    status: 'soon'
+    description: 'Add padding or a simple border around a photo.',
+    blurb: 'Useful for product shots and social posts.',
+    status: 'soon',
+    icon: 'border'
   }
 ];
 
@@ -71,6 +83,47 @@ function navigateTo(path: AppRoute) {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
+function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
+  return (
+    <span className={`suite-tool-icon suite-tool-icon-${kind}`} aria-hidden="true">
+      {kind === 'watermarker' ? (
+        <>
+          <span className="suite-tool-icon-frame" />
+          <span className="suite-tool-icon-pill" />
+        </>
+      ) : null}
+      {kind === 'collage' ? (
+        <>
+          <span className="suite-tool-icon-cell suite-tool-icon-cell-a" />
+          <span className="suite-tool-icon-cell suite-tool-icon-cell-b" />
+          <span className="suite-tool-icon-cell suite-tool-icon-cell-c" />
+          <span className="suite-tool-icon-cell suite-tool-icon-cell-d" />
+        </>
+      ) : null}
+      {kind === 'resize' ? (
+        <>
+          <span className="suite-tool-icon-box" />
+          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-a" />
+          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-b" />
+        </>
+      ) : null}
+      {kind === 'compress' ? (
+        <>
+          <span className="suite-tool-icon-box" />
+          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-c" />
+          <span className="suite-tool-icon-arrow suite-tool-icon-arrow-d" />
+        </>
+      ) : null}
+      {kind === 'border' ? (
+        <>
+          <span className="suite-tool-icon-border-outer" />
+          <span className="suite-tool-icon-border-inner" />
+        </>
+      ) : null}
+    </span>
+  );
+}
+
 function RouteIntro({
   route,
   onNavigate
@@ -95,11 +148,11 @@ function RouteIntro({
         </div>
         <div>
           <p className="eyebrow">Simple Photo Tools</p>
-          <h1>{isHome ? 'Free photo tools that stay on your device.' : activeLabel}</h1>
+          <h1>{isHome ? 'Simple photo tools that stay on your device.' : activeLabel}</h1>
           <p className="hero-copy">
             {isHome
-              ? 'Open the tool you need, edit your photo right in the browser, and save the result without uploading anything to a server.'
-              : 'Part of Simple Photo Tools: quick, private photo tools that run right in your browser.'}
+              ? 'Pick the tool you need, make your edits in the browser, and save the result without uploading anything to our server.'
+              : 'Part of Simple Photo Tools: private photo tools that run right in your browser.'}
           </p>
         </div>
       </div>
@@ -136,21 +189,20 @@ function HomePage({ onNavigate }: { onNavigate: (path: AppRoute) => void }) {
       {TOOL_CARDS.map((tool) => (
         <article key={tool.path} className="panel suite-card">
           <div className="suite-card-header">
-            <div>
-              <p className="eyebrow">{tool.status === 'live' ? 'Ready now' : 'Coming soon'}</p>
+            <div className="suite-card-title">
+              <ToolIcon kind={tool.icon} />
               <h2>{tool.name}</h2>
             </div>
-            <span className={`suite-status-badge ${tool.status === 'live' ? 'is-live' : ''}`}>
-              {tool.status === 'live' ? 'Live' : 'Soon'}
-            </span>
+            {tool.status === 'soon' ? <span className="suite-status-note">Coming soon</span> : null}
           </div>
           <p className="suite-card-copy">{tool.description}</p>
+          <p className="suite-card-blurb">{tool.blurb}</p>
           <button
             type="button"
             className={tool.status === 'live' ? 'primary-button' : 'secondary-button'}
             onClick={() => onNavigate(tool.path)}
           >
-            {tool.status === 'live' ? `Open ${tool.name}` : 'View coming soon'}
+            {tool.status === 'live' ? 'Open tool' : 'Coming soon'}
           </button>
         </article>
       ))}
