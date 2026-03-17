@@ -2,7 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { CollageMaker } from './components/collage/CollageMaker';
 import { WatermarkTool } from './components/watermark/WatermarkTool';
 
-type AppRoute = '/' | '/watermarker' | '/collage' | '/resize' | '/compress' | '/border';
+type AppRoute =
+  | '/'
+  | '/watermarker'
+  | '/collage'
+  | '/resize'
+  | '/compress'
+  | '/border'
+  | '/convert'
+  | '/crop'
+  | '/rotate'
+  | '/social';
 
 interface ToolCard {
   path: AppRoute;
@@ -10,7 +20,16 @@ interface ToolCard {
   description: string;
   blurb: string;
   status: 'live' | 'soon';
-  icon: 'watermarker' | 'collage' | 'resize' | 'compress' | 'border';
+  icon:
+    | 'watermarker'
+    | 'collage'
+    | 'resize'
+    | 'compress'
+    | 'border'
+    | 'convert'
+    | 'crop'
+    | 'rotate'
+    | 'social';
 }
 
 const TOOL_CARDS: ToolCard[] = [
@@ -47,6 +66,38 @@ const TOOL_CARDS: ToolCard[] = [
     icon: 'compress'
   },
   {
+    path: '/convert',
+    name: 'Image Converter',
+    description: 'Convert between JPG, PNG, and WebP formats.',
+    blurb: 'Helpful when you need a different image type.',
+    status: 'soon',
+    icon: 'convert'
+  },
+  {
+    path: '/crop',
+    name: 'Crop Tool',
+    description: 'Quickly crop images to the area you want.',
+    blurb: 'Useful for cleaner framing and common aspect ratios.',
+    status: 'soon',
+    icon: 'crop'
+  },
+  {
+    path: '/rotate',
+    name: 'Rotate / Flip',
+    description: 'Rotate or flip images before saving.',
+    blurb: 'Handy for quick fixes before you export.',
+    status: 'soon',
+    icon: 'rotate'
+  },
+  {
+    path: '/social',
+    name: 'Social Media Formatter',
+    description: 'Format images for Instagram, TikTok, and more.',
+    blurb: 'Useful when one photo needs different social sizes.',
+    status: 'soon',
+    icon: 'social'
+  },
+  {
     path: '/border',
     name: 'Border Maker',
     description: 'Add padding or a simple border around a photo.',
@@ -62,7 +113,15 @@ function normalizeRoute(pathname: string): AppRoute {
     return cleanPath;
   }
 
-  if (cleanPath === '/resize' || cleanPath === '/compress' || cleanPath === '/border') {
+  if (
+    cleanPath === '/resize' ||
+    cleanPath === '/compress' ||
+    cleanPath === '/border' ||
+    cleanPath === '/convert' ||
+    cleanPath === '/crop' ||
+    cleanPath === '/rotate' ||
+    cleanPath === '/social'
+  ) {
     return cleanPath;
   }
 
@@ -118,6 +177,35 @@ function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
             <path d="M27 26v20" className="icon-accent-stroke" />
             <path d="M37 30v12" className="icon-accent-stroke" />
             <path d="M47 34v4" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'convert' ? (
+          <>
+            <rect x="14" y="16" width="24" height="30" rx="9" className="icon-surface" />
+            <rect x="34" y="26" width="24" height="30" rx="9" className="icon-surface-strong" />
+            <path d="M28 53h16" className="icon-accent-stroke" />
+            <path d="M39 48l5 5-5 5" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'crop' ? (
+          <>
+            <path d="M25 17v30a6 6 0 0 0 6 6h24" className="icon-accent-stroke" />
+            <path d="M17 25h24a6 6 0 0 1 6 6v24" className="icon-accent-stroke" />
+            <rect x="31" y="31" width="18" height="18" rx="6" className="icon-surface" />
+          </>
+        ) : null}
+        {kind === 'rotate' ? (
+          <>
+            <path d="M24 26a16 16 0 1 1-2 21" className="icon-accent-stroke" />
+            <path d="M19 20v11h11" className="icon-accent-stroke" />
+            <path d="M42 41l10 10" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'social' ? (
+          <>
+            <rect x="14" y="18" width="19" height="36" rx="8" className="icon-surface" />
+            <rect x="39" y="14" width="19" height="26" rx="8" className="icon-surface-strong" />
+            <rect x="39" y="44" width="19" height="14" rx="6" className="icon-accent-soft-fill" />
           </>
         ) : null}
         {kind === 'border' ? (
@@ -278,6 +366,14 @@ export default function App() {
         return <ComingSoonPage toolName="Photo Resizer" onNavigate={navigateTo} />;
       case '/compress':
         return <ComingSoonPage toolName="Image Compressor" onNavigate={navigateTo} />;
+      case '/convert':
+        return <ComingSoonPage toolName="Image Converter" onNavigate={navigateTo} />;
+      case '/crop':
+        return <ComingSoonPage toolName="Crop Tool" onNavigate={navigateTo} />;
+      case '/rotate':
+        return <ComingSoonPage toolName="Rotate / Flip" onNavigate={navigateTo} />;
+      case '/social':
+        return <ComingSoonPage toolName="Social Media Formatter" onNavigate={navigateTo} />;
       case '/border':
         return <ComingSoonPage toolName="Border Maker" onNavigate={navigateTo} />;
       default:
