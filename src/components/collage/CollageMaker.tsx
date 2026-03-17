@@ -583,12 +583,129 @@ export function CollageMaker() {
     setStatusMessage('Photo removed.');
   };
 
+  const canAreaFit = (
+    occupiedCells: Set<string>,
+    column: number,
+    row: number,
+    colSpan: number,
+    rowSpan: number
+  ) => {
+    if (column < 0 || row < 0 || column + colSpan > MAX_COLLAGE_COLUMNS) {
+      return false;
+    }
+
+    for (let rowOffset = 0; rowOffset < rowSpan; rowOffset += 1) {
+      for (let columnOffset = 0; columnOffset < colSpan; columnOffset += 1) {
+        if (occupiedCells.has(`${column + columnOffset}:${row + rowOffset}`)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  const getResizeAnchor = (
+    index: number,
+    nextColSpan: number,
+    nextRowSpan: number,
+    anchoredTiles: CollageTile[]
+  ) => {
+    const currentPlacement = packedPreviewTiles.find((tile) => tile.index === index);
+    if (!currentPlacement) {
+      return null;
+    }
+
+    const occupiedCells = new Set<string>();
+    packedPreviewTiles.forEach((tile) => {
+      if (tile.index === index) {
+        return;
+      }
+
+      for (let rowOffset = 0; rowOffset < tile.rowSpan; rowOffset += 1) {
+        for (let columnOffset = 0; columnOffset < tile.colSpan; columnOffset += 1) {
+          occupiedCells.add(`${tile.column + columnOffset}:${tile.row + rowOffset}`);
+        }
+      }
+    });
+
+    let nextColumn = currentPlacement.column;
+    let nextRow = currentPlacement.row;
+    let workingColSpan = currentPlacement.colSpan;
+    let workingRowSpan = currentPlacement.rowSpan;
+
+    while (workingColSpan < nextColSpan) {
+      const canGrowLeft = canAreaFit(
+        occupiedCells,
+        nextColumn - 1,
+        nextRow,
+        workingColSpan + 1,
+        workingRowSpan
+      );
+      const canGrowRight = canAreaFit(
+        occupiedCells,
+        nextColumn,
+        nextRow,
+        workingColSpan + 1,
+        workingRowSpan
+      );
+
+      if (canGrowLeft && !canGrowRight) {
+        nextColumn -= 1;
+      } else if (!canGrowLeft && !canGrowRight) {
+        break;
+      }
+
+      workingColSpan += 1;
+    }
+
+    while (workingRowSpan < nextRowSpan) {
+      const canGrowUp = canAreaFit(
+        occupiedCells,
+        nextColumn,
+        nextRow - 1,
+        workingColSpan,
+        workingRowSpan + 1
+      );
+      const canGrowDown = canAreaFit(
+        occupiedCells,
+        nextColumn,
+        nextRow,
+        workingColSpan,
+        workingRowSpan + 1
+      );
+
+      if (canGrowUp && !canGrowDown) {
+        nextRow -= 1;
+      } else if (!canGrowUp && !canGrowDown) {
+        break;
+      }
+
+      workingRowSpan += 1;
+    }
+
+    const tile = anchoredTiles[index];
+    if (!tile) {
+      return null;
+    }
+
+    return {
+      ...tile,
+      gridColumn: nextColumn,
+      gridRow: nextRow,
+      colSpan: nextColSpan,
+      rowSpan: nextRowSpan
+    };
+  };
+
   const handleResizeTile = (index: number, colSpan: number, rowSpan: number) => {
     setTiles((current) => {
       const anchoredTiles = anchorTilesToCurrentLayout(current);
+      const resizedTile = getResizeAnchor(index, colSpan, rowSpan, anchoredTiles);
+
       return anchoredTiles.map((tile, currentIndex) =>
         currentIndex === index
-          ? {
+          ? resizedTile ?? {
               ...tile,
               colSpan,
               rowSpan
