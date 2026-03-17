@@ -34,6 +34,7 @@ interface CollagePreviewProps {
   canBuild: boolean;
   helperText?: string;
   exportFrameNote?: string;
+  headerActionsSlot?: ReactNode;
   controlsSlot?: ReactNode;
   previewCells?: CollagePackedTile[];
   previewMetrics?: CollageLayoutMetrics | null;
@@ -76,6 +77,7 @@ export function CollagePreview({
   canBuild,
   helperText,
   exportFrameNote,
+  headerActionsSlot,
   controlsSlot,
   previewCells = [],
   previewMetrics = null,
@@ -818,7 +820,10 @@ export function CollagePreview({
           <p className="eyebrow">{stepLabel}</p>
           <h2>{title}</h2>
         </div>
-        {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
+        <div className="preview-panel-heading-meta">
+          {headerActionsSlot}
+          {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
+        </div>
       </div>
 
       <div
@@ -1067,22 +1072,25 @@ export function CollagePreview({
         )}
       </div>
 
-      {controlsSlot}
-
-      {helperText && canBuild ? (
-        <div className="preview-footer">
-          <div className="tip-note panel-description panel-description-tight" role="note">
-            <span className="tip-note-icon" aria-hidden="true">
-              i
-            </span>
-            <p className="helper-text">{helperText}</p>
-          </div>
-          {exportFrameNote ? (
-            <div className="tip-note preview-desktop-note" role="note">
-              <span className="tip-note-icon" aria-hidden="true">
-                i
-              </span>
-              <p className="helper-text">{exportFrameNote}</p>
+      {controlsSlot || (helperText && canBuild) ? (
+        <div className="preview-controls-region">
+          {controlsSlot}
+          {helperText && canBuild ? (
+            <div className="preview-footer">
+              <div className="tip-note panel-description panel-description-tight" role="note">
+                <span className="tip-note-icon" aria-hidden="true">
+                  i
+                </span>
+                <p className="helper-text">{helperText}</p>
+              </div>
+              {exportFrameNote ? (
+                <div className="tip-note preview-desktop-note" role="note">
+                  <span className="tip-note-icon" aria-hidden="true">
+                    i
+                  </span>
+                  <p className="helper-text">{exportFrameNote}</p>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>

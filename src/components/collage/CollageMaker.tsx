@@ -1097,14 +1097,16 @@ export function CollageMaker() {
             />
           </label>
         </div>
-        <button
-          type="button"
-          className="thumb-inline-button is-danger"
-          onClick={() => handleRemoveImage(selectedImageIndex)}
-          disabled={isBusy}
-        >
-          Remove Photo
-        </button>
+        {!compact ? (
+          <button
+            type="button"
+            className="thumb-inline-button is-danger"
+            onClick={() => handleRemoveImage(selectedImageIndex)}
+            disabled={isBusy}
+          >
+            Remove Photo
+          </button>
+        ) : null}
       </div>
     );
   };
@@ -1269,6 +1271,37 @@ export function CollageMaker() {
     setStatusMessage('Redid the collage change.');
   };
 
+  const arrangeHeaderActions = (
+    <div className="arrange-header-actions">
+      <button
+        type="button"
+        className="ghost-button"
+        onClick={handleUndo}
+        disabled={!canUndo || isBusy}
+      >
+        Undo
+      </button>
+      <button
+        type="button"
+        className="ghost-button"
+        onClick={handleRedo}
+        disabled={!canRedo || isBusy}
+      >
+        Redo
+      </button>
+      {selectedImageIndex !== null && tiles[selectedImageIndex] ? (
+        <button
+          type="button"
+          className="ghost-button is-danger"
+          onClick={() => handleRemoveImage(selectedImageIndex)}
+          disabled={isBusy}
+        >
+          Remove
+        </button>
+      ) : null}
+    </div>
+  );
+
   return (
     <>
       <section className="hero">
@@ -1333,14 +1366,18 @@ export function CollageMaker() {
               imageCount={tiles.length}
               canBuild={canBuildCollage}
               helperText={previewHelperText}
-              exportFrameNote="Everything inside this frame exports exactly as shown."
+              headerActionsSlot={canBuildCollage ? arrangeHeaderActions : null}
               previewCells={packedPreviewTiles}
               previewMetrics={previewMetrics}
               gap={settings.gap}
               backgroundColor={settings.backgroundColor}
               previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
               previewImageUrls={tiles.map((tile) => tile.objectUrl)}
-              controlsSlot={selectedImageIndex !== null ? renderSelectedTileActions(true) : null}
+              controlsSlot={
+                canTouchPreviewMove && selectedImageIndex !== null
+                  ? renderSelectedTileActions(true)
+                  : null
+              }
               isInteractive={(canPreviewDrag || canTouchPreviewMove) && canBuildCollage && !isBusy}
               allowTouchMove={canTouchPreviewMove && canBuildCollage && !isBusy}
               selectedIndex={selectedImageIndex ?? undefined}

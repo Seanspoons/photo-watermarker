@@ -641,6 +641,24 @@ select:disabled {
   align-self: start;
 }
 
+.preview-panel-heading-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.arrange-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-controls-region {
+  display: grid;
+  gap: 12px;
+}
+
 .preview-canvas {
   display: block;
   width: 100%;
@@ -1404,6 +1422,12 @@ select:disabled {
   border-color: var(--border);
 }
 
+.ghost-button.is-danger {
+  color: var(--danger);
+  border-color: rgba(170, 68, 48, 0.18);
+  background: #fff9f7;
+}
+
 .message {
   margin-bottom: 18px;
   padding: 14px 18px;
@@ -1621,10 +1645,37 @@ select:disabled {
   }
 
   .collage-arrange-panel {
+    display: flex;
+    flex-direction: column;
     max-height: calc(100vh - 40px);
-    overflow: auto;
+  }
+
+  .collage-arrange-panel .panel-heading,
+  .collage-arrange-panel .preview-shell,
+  .collage-arrange-panel .preview-footer {
+    flex: 0 0 auto;
+  }
+
+  .collage-arrange-panel .preview-controls-region {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
+    padding-right: 6px;
+  }
+
+  .collage-arrange-panel .preview-controls-region::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .collage-arrange-panel .preview-controls-region::-webkit-scrollbar-thumb {
+    background: rgba(31, 59, 45, 0.18);
+    border-radius: 999px;
+  }
+
+  .collage-arrange-panel .preview-panel-heading-meta {
+    justify-content: flex-end;
   }
 }
 
@@ -1661,6 +1712,19 @@ select:disabled {
 
   .panel-heading {
     flex-direction: column;
+  }
+
+  .preview-panel-heading-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .arrange-header-actions {
+    width: 100%;
+  }
+
+  .arrange-header-actions > * {
+    flex: 1 1 0;
   }
 
   .panel-heading-actions {
