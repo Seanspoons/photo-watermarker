@@ -7,6 +7,7 @@ import {
   useRef,
   useState
 } from 'react';
+import { MAX_COLLAGE_COLUMNS } from '../../constants';
 import {
   CollageLayoutMetrics,
   CollagePackedTile
@@ -327,7 +328,7 @@ export function CollagePreview({
       startRowSpan: cell.rowSpan,
       nextColSpan: cell.colSpan,
       nextRowSpan: cell.rowSpan,
-      maxColSpan: Math.max(1, previewMetrics.columns - cell.column)
+      maxColSpan: Math.max(1, MAX_COLLAGE_COLUMNS - cell.column)
     };
     setActiveResizePreview({
       index: cell.index,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmModal } from '../ConfirmModal';
 import {
+  MAX_COLLAGE_COLUMNS,
   MAX_COLLAGE_IMAGES,
   COLLAGE_PRESETS_STORAGE_KEY,
   COLLAGE_SETTINGS_STORAGE_KEY
@@ -102,7 +103,11 @@ function getRecommendedColumns(imageCount: number): number {
     return 5;
   }
 
-  return 6;
+  if (imageCount <= 36) {
+    return 6;
+  }
+
+  return 7;
 }
 
 function getRecommendedSettings(
@@ -526,7 +531,14 @@ export function CollageMaker() {
   };
 
   const handleResizePreview = (index: number, colSpan: number, rowSpan: number) => {
-    setResizePreviewColumns((current) => current ?? previewMetrics.columns);
+    const previewTile = packedPreviewTiles.find((tile) => tile.index === index);
+    const requiredColumns = previewTile
+      ? Math.min(MAX_COLLAGE_COLUMNS, previewTile.column + colSpan)
+      : previewMetrics.columns;
+
+    setResizePreviewColumns((current) =>
+      Math.max(current ?? previewMetrics.columns, requiredColumns)
+    );
     setResizePreview({ index, colSpan, rowSpan });
   };
 

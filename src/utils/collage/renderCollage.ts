@@ -1,3 +1,4 @@
+import { MAX_COLLAGE_COLUMNS } from '../../constants';
 import { CollageFitMode, CollageSettings, CollageTile } from '../../types';
 
 interface CanvasSize {
@@ -123,7 +124,7 @@ function getRequiredColumns(tiles: CollageTile[], columns: number) {
       return maxColumns;
     }
 
-    return Math.max(maxColumns, tile.gridColumn + normalizeSpan(tile.colSpan, 7));
+    return Math.max(maxColumns, tile.gridColumn + normalizeSpan(tile.colSpan, MAX_COLLAGE_COLUMNS));
   }, columns);
 }
 
@@ -137,7 +138,9 @@ function packTiles(tiles: CollageTile[], columns: number): { placements: PackedT
     const colSpan = normalizeSpan(tile.colSpan, safeColumns);
     const rowSpan = normalizeSpan(tile.rowSpan, 4);
     const preferredColumn =
-      tile.gridColumn === null ? null : clamp(tile.gridColumn, 0, Math.max(0, safeColumns - colSpan));
+      tile.gridColumn === null
+        ? null
+        : clamp(tile.gridColumn, 0, Math.max(0, safeColumns - colSpan));
     const preferredRow = tile.gridRow === null ? null : Math.max(0, tile.gridRow);
     let row = 0;
     let placed = false;
@@ -223,7 +226,9 @@ function getPackedTiles(
 
   let safeColumns = getRequiredColumns(
     tiles,
-    columnOverride !== undefined ? clamp(columnOverride, 2, 7) : clamp(settings.columns, 2, 7)
+    columnOverride !== undefined
+      ? clamp(columnOverride, 2, MAX_COLLAGE_COLUMNS)
+      : clamp(settings.columns, 2, MAX_COLLAGE_COLUMNS)
   );
   let { placements, rows } = packTiles(tiles, safeColumns);
   let frameColumns = safeColumns;
