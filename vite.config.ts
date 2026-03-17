@@ -13,9 +13,9 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'masked-icon.svg'],
         manifest: {
-          name: 'Photo Watermarker',
-          short_name: 'Watermarker',
-          description: 'Private, offline-capable watermarking for photos in your browser.',
+          name: 'Simple Photo Tools',
+          short_name: 'Photo Tools',
+          description: 'Free browser-based photo tools for watermarking, collages, and more.',
           theme_color: '#f4efe6',
           background_color: '#f4efe6',
           display: 'standalone',

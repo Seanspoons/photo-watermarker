@@ -57,6 +57,11 @@ function normalizeRoute(pathname: string): AppRoute {
   return '/';
 }
 
+function resolveRouteFromLocation(locationLike: Pick<Location, 'pathname' | 'search'>): AppRoute {
+  const redirectedPath = new URLSearchParams(locationLike.search).get('p');
+  return normalizeRoute(redirectedPath || locationLike.pathname);
+}
+
 function navigateTo(path: AppRoute) {
   if (window.location.pathname === path) {
     return;
@@ -185,11 +190,18 @@ function ComingSoonPage({
 
 export default function App() {
   const logoUrl = `${import.meta.env.BASE_URL}icon.svg`;
-  const [route, setRoute] = useState<AppRoute>(() => normalizeRoute(window.location.pathname));
+  const [route, setRoute] = useState<AppRoute>(() => resolveRouteFromLocation(window.location));
 
   useEffect(() => {
+    const redirectedPath = new URLSearchParams(window.location.search).get('p');
+    if (redirectedPath) {
+      const normalizedPath = normalizeRoute(redirectedPath);
+      window.history.replaceState({}, '', normalizedPath);
+      setRoute(normalizedPath);
+    }
+
     const handleLocationChange = () => {
-      setRoute(normalizeRoute(window.location.pathname));
+      setRoute(resolveRouteFromLocation(window.location));
     };
 
     window.addEventListener('popstate', handleLocationChange);
