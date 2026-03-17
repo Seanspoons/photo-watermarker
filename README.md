@@ -164,5 +164,4 @@ I wanted a fast, simple photo tool that:
 - Batch watermarking
 - Image (logo) watermark presets
 - More collage layout presets
-- Drag-based layout controls
 - Additional export presets for social media
