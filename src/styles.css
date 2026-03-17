@@ -568,6 +568,20 @@ select:disabled {
   cursor: ew-resize;
 }
 
+.preview-resize-handle-left {
+  top: 50%;
+  left: -10px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.preview-resize-handle-top {
+  left: 50%;
+  top: -10px;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
 .preview-resize-handle-bottom {
   left: 50%;
   bottom: -10px;
@@ -575,7 +589,25 @@ select:disabled {
   cursor: ns-resize;
 }
 
-.preview-resize-handle-corner {
+.preview-resize-handle-top-left {
+  left: -10px;
+  top: -10px;
+  cursor: nwse-resize;
+}
+
+.preview-resize-handle-top-right {
+  right: -10px;
+  top: -10px;
+  cursor: nesw-resize;
+}
+
+.preview-resize-handle-bottom-left {
+  left: -10px;
+  bottom: -10px;
+  cursor: nesw-resize;
+}
+
+.preview-resize-handle-bottom-right {
   right: -10px;
   bottom: -10px;
   cursor: nwse-resize;

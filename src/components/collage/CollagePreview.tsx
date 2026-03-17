@@ -14,6 +14,16 @@ import {
   CollagePackedTile
 } from '../../utils/collage/renderCollage';
 
+type ResizeHandleMode =
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
+
 interface CollagePreviewProps {
   stepLabel?: string;
   title?: string;
@@ -42,8 +52,18 @@ interface CollagePreviewProps {
   onTileDrop?: (index: number) => void;
   onEmptySlotDrop?: (column: number, row: number) => void;
   onTileDragEnd?: () => void;
-  onTileResizePreview?: (index: number, colSpan: number, rowSpan: number) => void;
-  onTileResizeCommit?: (index: number, colSpan: number, rowSpan: number) => void;
+  onTileResizePreview?: (
+    index: number,
+    colSpan: number,
+    rowSpan: number,
+    mode: ResizeHandleMode
+  ) => void;
+  onTileResizeCommit?: (
+    index: number,
+    colSpan: number,
+    rowSpan: number,
+    mode: ResizeHandleMode
+  ) => void;
   onTileResizeCancel?: () => void;
 }
 
@@ -92,7 +112,7 @@ export function CollagePreview({
   const resizeStateRef = useRef<{
     index: number;
     pointerId: number;
-    mode: 'right' | 'bottom' | 'corner';
+    mode: ResizeHandleMode;
     startX: number;
     startY: number;
     startColSpan: number;
@@ -496,7 +516,7 @@ export function CollagePreview({
   const handleResizeStart = (
     event: ReactPointerEvent<HTMLButtonElement>,
     cell: (typeof scaledCells)[number],
-    mode: 'right' | 'bottom' | 'corner'
+    mode: ResizeHandleMode
   ) => {
     if (!previewMetrics) {
       return;
@@ -543,33 +563,39 @@ export function CollagePreview({
 
     const rawDeltaColumns = event.clientX - resizeState.startX;
     const rawDeltaRows = event.clientY - resizeState.startY;
+    const affectsLeft = resizeState.mode.includes('left');
+    const affectsRight = resizeState.mode.includes('right');
+    const affectsTop = resizeState.mode.includes('top');
+    const affectsBottom = resizeState.mode.includes('bottom');
+    const isCorner =
+      (affectsLeft || affectsRight) && (affectsTop || affectsBottom);
     const deltaColumns =
-      resizeState.mode === 'bottom' ? 0 : snapUnits(rawDeltaColumns, horizontalStep);
+      affectsLeft
+        ? snapUnits(-rawDeltaColumns, horizontalStep)
+        : affectsRight
+          ? snapUnits(rawDeltaColumns, horizontalStep)
+          : 0;
     const deltaRows =
-      resizeState.mode === 'right' ? 0 : snapUnits(rawDeltaRows, verticalStep);
+      affectsTop
+        ? snapUnits(-rawDeltaRows, verticalStep)
+        : affectsBottom
+          ? snapUnits(rawDeltaRows, verticalStep)
+          : 0;
 
-    const squareDelta =
-      resizeState.mode === 'corner'
-        ? snapUnits(
-            ((event.clientX - resizeState.startX) / Math.max(horizontalStep, 1) +
-              (event.clientY - resizeState.startY) / Math.max(verticalStep, 1)) /
-              2,
-            1
-          )
-        : 0;
+    const squareDelta = isCorner ? Math.round((deltaColumns + deltaRows) / 2) : 0;
 
     const nextColSpan = Math.min(
       resizeState.maxColSpan,
       Math.max(
         1,
-        resizeState.startColSpan + (resizeState.mode === 'corner' ? squareDelta : deltaColumns)
+        resizeState.startColSpan + (isCorner ? squareDelta : deltaColumns)
       )
     );
     const nextRowSpan = Math.min(
-      4,
+      8,
       Math.max(
         1,
-        resizeState.startRowSpan + (resizeState.mode === 'corner' ? squareDelta : deltaRows)
+        resizeState.startRowSpan + (isCorner ? squareDelta : deltaRows)
       )
     );
 
@@ -580,7 +606,7 @@ export function CollagePreview({
       colSpan: nextColSpan,
       rowSpan: nextRowSpan
     });
-    onTileResizePreview?.(resizeState.index, nextColSpan, nextRowSpan);
+    onTileResizePreview?.(resizeState.index, nextColSpan, nextRowSpan, resizeState.mode);
   };
 
   const handleResizeEnd = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -593,7 +619,12 @@ export function CollagePreview({
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    onTileResizeCommit?.(resizeState.index, resizeState.nextColSpan, resizeState.nextRowSpan);
+    onTileResizeCommit?.(
+      resizeState.index,
+      resizeState.nextColSpan,
+      resizeState.nextRowSpan,
+      resizeState.mode
+    );
     resizeStateRef.current = null;
     setActiveResizePreview(null);
   };
@@ -762,8 +793,18 @@ export function CollagePreview({
                         <>
                           <button
                             type="button"
+                            className="preview-resize-handle preview-resize-handle-left"
+                            aria-label="Resize from the left"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'left')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
                             className="preview-resize-handle preview-resize-handle-right"
-                            aria-label="Resize wider"
+                            aria-label="Resize from the right"
                             tabIndex={-1}
                             onPointerDown={(event) => handleResizeStart(event, cell, 'right')}
                             onPointerMove={handleResizeMove}
@@ -772,8 +813,18 @@ export function CollagePreview({
                           />
                           <button
                             type="button"
+                            className="preview-resize-handle preview-resize-handle-top"
+                            aria-label="Resize from the top"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'top')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
                             className="preview-resize-handle preview-resize-handle-bottom"
-                            aria-label="Resize taller"
+                            aria-label="Resize from the bottom"
                             tabIndex={-1}
                             onPointerDown={(event) => handleResizeStart(event, cell, 'bottom')}
                             onPointerMove={handleResizeMove}
@@ -782,10 +833,40 @@ export function CollagePreview({
                           />
                           <button
                             type="button"
-                            className="preview-resize-handle preview-resize-handle-corner"
-                            aria-label="Resize larger"
+                            className="preview-resize-handle preview-resize-handle-top-left"
+                            aria-label="Resize from the top left"
                             tabIndex={-1}
-                            onPointerDown={(event) => handleResizeStart(event, cell, 'corner')}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'top-left')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-top-right"
+                            aria-label="Resize from the top right"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'top-right')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-bottom-left"
+                            aria-label="Resize from the bottom left"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'bottom-left')}
+                            onPointerMove={handleResizeMove}
+                            onPointerUp={handleResizeEnd}
+                            onPointerCancel={handleResizeCancel}
+                          />
+                          <button
+                            type="button"
+                            className="preview-resize-handle preview-resize-handle-bottom-right"
+                            aria-label="Resize from the bottom right"
+                            tabIndex={-1}
+                            onPointerDown={(event) => handleResizeStart(event, cell, 'bottom-right')}
                             onPointerMove={handleResizeMove}
                             onPointerUp={handleResizeEnd}
                             onPointerCancel={handleResizeCancel}

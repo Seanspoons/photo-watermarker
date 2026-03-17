@@ -31,6 +31,15 @@ import { CollagePreview } from './CollagePreview';
 import { CollageUploadPanel } from './CollageUploadPanel';
 
 type CollageConfirmAction = 'clear' | 'reset' | null;
+type ResizeHandleMode =
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
 
 const DEFAULT_COLLAGE_SETTINGS: CollageSettings = {
   sizePreset: 'instagram-square',
@@ -609,7 +618,8 @@ export function CollageMaker() {
     index: number,
     nextColSpan: number,
     nextRowSpan: number,
-    anchoredTiles: CollageTile[]
+    anchoredTiles: CollageTile[],
+    mode: ResizeHandleMode = 'bottom-right'
   ) => {
     const currentPlacement = packedPreviewTiles.find((tile) => tile.index === index);
     if (!currentPlacement) {
@@ -633,6 +643,20 @@ export function CollageMaker() {
     let nextRow = currentPlacement.row;
     let workingColSpan = currentPlacement.colSpan;
     let workingRowSpan = currentPlacement.rowSpan;
+    const prefersLeft = mode.includes('left');
+    const prefersRight = mode.includes('right');
+    const prefersTop = mode.includes('top');
+    const prefersBottom = mode.includes('bottom');
+
+    if (nextColSpan < currentPlacement.colSpan && prefersLeft) {
+      nextColumn += currentPlacement.colSpan - nextColSpan;
+      workingColSpan = nextColSpan;
+    }
+
+    if (nextRowSpan < currentPlacement.rowSpan && prefersTop) {
+      nextRow += currentPlacement.rowSpan - nextRowSpan;
+      workingRowSpan = nextRowSpan;
+    }
 
     while (workingColSpan < nextColSpan) {
       const canGrowLeft = canAreaFit(
@@ -650,7 +674,11 @@ export function CollageMaker() {
         workingRowSpan
       );
 
-      if (canGrowLeft && !canGrowRight) {
+      if (prefersLeft && canGrowLeft) {
+        nextColumn -= 1;
+      } else if (prefersRight && canGrowRight) {
+        // Keep the current anchor and grow outward to the right.
+      } else if (canGrowLeft && !canGrowRight) {
         nextColumn -= 1;
       } else if (!canGrowLeft && !canGrowRight) {
         break;
@@ -675,7 +703,11 @@ export function CollageMaker() {
         workingRowSpan + 1
       );
 
-      if (canGrowUp && !canGrowDown) {
+      if (prefersTop && canGrowUp) {
+        nextRow -= 1;
+      } else if (prefersBottom && canGrowDown) {
+        // Keep the current anchor and grow downward.
+      } else if (canGrowUp && !canGrowDown) {
         nextRow -= 1;
       } else if (!canGrowUp && !canGrowDown) {
         break;
@@ -698,10 +730,15 @@ export function CollageMaker() {
     };
   };
 
-  const handleResizeTile = (index: number, colSpan: number, rowSpan: number) => {
+  const handleResizeTile = (
+    index: number,
+    colSpan: number,
+    rowSpan: number,
+    mode: ResizeHandleMode = 'bottom-right'
+  ) => {
     setTiles((current) => {
       const anchoredTiles = anchorTilesToCurrentLayout(current);
-      const resizedTile = getResizeAnchor(index, colSpan, rowSpan, anchoredTiles);
+      const resizedTile = getResizeAnchor(index, colSpan, rowSpan, anchoredTiles, mode);
 
       return anchoredTiles.map((tile, currentIndex) =>
         currentIndex === index
@@ -715,7 +752,12 @@ export function CollageMaker() {
     });
   };
 
-  const handleResizePreview = (index: number, colSpan: number, rowSpan: number) => {
+  const handleResizePreview = (
+    index: number,
+    colSpan: number,
+    rowSpan: number,
+    _mode: ResizeHandleMode
+  ) => {
     const previewTile = packedPreviewTiles.find((tile) => tile.index === index);
     const requestedColumns = previewTile ? previewTile.column + colSpan : previewMetrics.columns;
     const requiredColumns = Math.min(MAX_COLLAGE_COLUMNS, requestedColumns);
@@ -727,7 +769,12 @@ export function CollageMaker() {
     setResizePreview({ index, colSpan, rowSpan });
   };
 
-  const handleResizeCommit = (index: number, colSpan: number, rowSpan: number) => {
+  const handleResizeCommit = (
+    index: number,
+    colSpan: number,
+    rowSpan: number,
+    mode: ResizeHandleMode
+  ) => {
     const nextColumns = Math.max(settings.columns, resizePreviewColumns ?? settings.columns);
     setResizePreview(null);
     setResizePreviewColumns(null);
@@ -736,7 +783,7 @@ export function CollageMaker() {
       ...current,
       columns: Math.max(current.columns, nextColumns)
     }));
-    handleResizeTile(index, colSpan, rowSpan);
+    handleResizeTile(index, colSpan, rowSpan, mode);
     setStatusMessage(
       resizeHitMaxColumns
         ? `Tile resized to ${colSpan} × ${rowSpan}. Reached the max grid width of ${MAX_COLLAGE_COLUMNS} columns.`
