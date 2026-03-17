@@ -190,7 +190,7 @@ export function CollageControls({
           <input
             type="range"
             min="2"
-            max="5"
+            max="7"
             step="1"
             value={settings.columns}
             onChange={(event) => onChange('columns', Number(event.target.value))}

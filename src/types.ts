@@ -55,6 +55,8 @@ export interface CollageTileDraftState {
   id: string;
   colSpan: number;
   rowSpan: number;
+  gridColumn: number | null;
+  gridRow: number | null;
 }
 
 export interface ImageAsset {
@@ -72,6 +74,8 @@ export interface CollageTile extends ImageAsset {
   id: string;
   colSpan: number;
   rowSpan: number;
+  gridColumn: number | null;
+  gridRow: number | null;
 }
 
 export interface RenderWatermarkOptions {

@@ -45,7 +45,9 @@ function createCollageTile(image: ImageAsset): CollageTile {
     ...image,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
     colSpan: 1,
-    rowSpan: 1
+    rowSpan: 1,
+    gridColumn: null,
+    gridRow: null
   };
 }
 
@@ -96,7 +98,11 @@ function getRecommendedColumns(imageCount: number): number {
     return 4;
   }
 
-  return 5;
+  if (imageCount <= 25) {
+    return 5;
+  }
+
+  return 6;
 }
 
 function getRecommendedSettings(
@@ -285,7 +291,9 @@ export function CollageMaker() {
             ...createCollageTile(image),
             id: storedTile?.id ?? `${Date.now()}-${index}`,
             colSpan: storedTile?.colSpan ?? 1,
-            rowSpan: storedTile?.rowSpan ?? 1
+            rowSpan: storedTile?.rowSpan ?? 1,
+            gridColumn: storedTile?.gridColumn ?? null,
+            gridRow: storedTile?.gridRow ?? null
           };
         });
 
@@ -350,7 +358,9 @@ export function CollageMaker() {
       tiles.map((tile) => ({
         id: tile.id,
         colSpan: tile.colSpan,
-        rowSpan: tile.rowSpan
+        rowSpan: tile.rowSpan,
+        gridColumn: tile.gridColumn,
+        gridRow: tile.gridRow
       }))
     );
   }, [hasLoadedDraft, settings, tiles]);
@@ -506,6 +516,8 @@ export function CollageMaker() {
         currentIndex === index
           ? {
               ...tile,
+              gridColumn: null,
+              gridRow: null,
               colSpan,
               rowSpan
             }
@@ -620,34 +632,20 @@ export function CollageMaker() {
       return;
     }
 
-    const targetTile = packedPreviewTiles.find(
-      (tile) => tile.row > row || (tile.row === row && tile.column >= column)
+    setTiles((current) =>
+      current.map((tile, index) =>
+        index === draggedIndex
+          ? {
+              ...tile,
+              gridColumn: column,
+              gridRow: row
+            }
+          : tile
+      )
     );
 
-    setTiles((current) => {
-      if (draggedIndex < 0 || draggedIndex >= current.length) {
-        return current;
-      }
-
-      const nextTiles = [...current];
-      const [draggedTile] = nextTiles.splice(draggedIndex, 1);
-      if (!draggedTile) {
-        return current;
-      }
-
-      if (!targetTile) {
-        nextTiles.push(draggedTile);
-        return nextTiles;
-      }
-
-      const targetIndex = current.findIndex((tile) => tile.id === targetTile.id);
-      const insertionIndex = targetIndex > draggedIndex ? targetIndex - 1 : targetIndex;
-      nextTiles.splice(insertionIndex, 0, draggedTile);
-      return nextTiles;
-    });
-
     setSelectedImageIndex(draggedIndex);
-    setStatusMessage('Photo order updated.');
+    setStatusMessage('Photo moved.');
     handleDragEnd();
   };
 

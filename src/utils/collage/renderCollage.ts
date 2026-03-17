@@ -117,6 +117,16 @@ function markOccupied(
   }
 }
 
+function getRequiredColumns(tiles: CollageTile[], columns: number) {
+  return tiles.reduce((maxColumns, tile) => {
+    if (tile.gridColumn === null) {
+      return maxColumns;
+    }
+
+    return Math.max(maxColumns, tile.gridColumn + normalizeSpan(tile.colSpan, 7));
+  }, columns);
+}
+
 function packTiles(tiles: CollageTile[], columns: number): { placements: PackedTilePlacement[]; rows: number } {
   const safeColumns = clamp(columns, 1, Math.max(1, columns));
   const occupancy: boolean[][] = [];
@@ -126,8 +136,29 @@ function packTiles(tiles: CollageTile[], columns: number): { placements: PackedT
   tiles.forEach((tile, index) => {
     const colSpan = normalizeSpan(tile.colSpan, safeColumns);
     const rowSpan = normalizeSpan(tile.rowSpan, 4);
+    const preferredColumn =
+      tile.gridColumn === null ? null : clamp(tile.gridColumn, 0, Math.max(0, safeColumns - colSpan));
+    const preferredRow = tile.gridRow === null ? null : Math.max(0, tile.gridRow);
     let row = 0;
     let placed = false;
+
+    if (
+      preferredColumn !== null &&
+      preferredRow !== null &&
+      canFitAt(occupancy, preferredColumn, preferredRow, colSpan, rowSpan, safeColumns)
+    ) {
+      markOccupied(occupancy, preferredColumn, preferredRow, colSpan, rowSpan, safeColumns);
+      placements.push({
+        id: tile.id,
+        index,
+        column: preferredColumn,
+        row: preferredRow,
+        colSpan,
+        rowSpan
+      });
+      maxRow = Math.max(maxRow, preferredRow + rowSpan);
+      placed = true;
+    }
 
     while (!placed) {
       for (let column = 0; column <= safeColumns - colSpan; column += 1) {
@@ -157,41 +188,6 @@ function packTiles(tiles: CollageTile[], columns: number): { placements: PackedT
     placements,
     rows: Math.max(maxRow, 1)
   };
-}
-
-function getTileArea(tiles: CollageTile[]) {
-  return tiles.reduce(
-    (total, tile) => total + normalizeSpan(tile.colSpan, 6) * normalizeSpan(tile.rowSpan, 6),
-    0
-  );
-}
-
-function chooseColumnCount(tiles: CollageTile[], settings: CollageSettings, outputSize: CanvasSize) {
-  const preferredColumns = clamp(settings.columns, 2, 6);
-  const totalArea = getTileArea(tiles);
-  const targetAspect = outputSize.width / outputSize.height;
-  const idealColumns = Math.max(2, Math.round(Math.sqrt(totalArea * targetAspect)));
-  const candidateMax = clamp(Math.max(preferredColumns + 2, idealColumns + 1), 2, 6);
-  let bestColumns = preferredColumns;
-  let bestScore = Number.POSITIVE_INFINITY;
-
-  for (let candidateColumns = 2; candidateColumns <= candidateMax; candidateColumns += 1) {
-    const { rows } = packTiles(tiles, candidateColumns);
-    const gridAspect = candidateColumns / rows;
-    const emptyCells = candidateColumns * rows - totalArea;
-    const growthPenalty = candidateColumns > preferredColumns ? (candidateColumns - preferredColumns) * 0.18 : 0;
-    const score =
-      Math.abs(gridAspect - targetAspect) * 6 +
-      emptyCells * 0.35 +
-      growthPenalty;
-
-    if (score < bestScore) {
-      bestColumns = candidateColumns;
-      bestScore = score;
-    }
-  }
-
-  return bestColumns;
 }
 
 function chooseFrameRows(columns: number, packedRows: number, outputSize: CanvasSize) {
@@ -225,10 +221,10 @@ function getPackedTiles(
   const targetAspect = outputSize.width / outputSize.height;
   const isSquareOutput = Math.abs(targetAspect - 1) < 0.01;
 
-  let safeColumns =
-    columnOverride !== undefined
-      ? clamp(columnOverride, 2, 6)
-      : chooseColumnCount(tiles, settings, outputSize);
+  let safeColumns = getRequiredColumns(
+    tiles,
+    columnOverride !== undefined ? clamp(columnOverride, 2, 7) : clamp(settings.columns, 2, 7)
+  );
   let { placements, rows } = packTiles(tiles, safeColumns);
   let frameColumns = safeColumns;
   let frameRows = chooseFrameRows(safeColumns, rows, outputSize);
