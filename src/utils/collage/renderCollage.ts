@@ -221,14 +221,28 @@ function getPackedTiles(
     };
   }
 
-  const safeColumns = chooseColumnCount(tiles, settings, outputSize);
-  const { placements, rows } = packTiles(tiles, safeColumns);
-  const frameRows = chooseFrameRows(safeColumns, rows, outputSize);
+  const targetAspect = outputSize.width / outputSize.height;
+  const isSquareOutput = Math.abs(targetAspect - 1) < 0.01;
+
+  let safeColumns = chooseColumnCount(tiles, settings, outputSize);
+  let { placements, rows } = packTiles(tiles, safeColumns);
+  let frameColumns = safeColumns;
+  let frameRows = chooseFrameRows(safeColumns, rows, outputSize);
+
+  if (isSquareOutput) {
+    frameColumns = Math.max(safeColumns, rows);
+    const repacked = packTiles(tiles, frameColumns);
+    placements = repacked.placements;
+    rows = repacked.rows;
+    frameRows = Math.max(frameColumns, rows);
+    safeColumns = frameColumns;
+  }
+
   const cellSize = Math.min(
-    (outputSize.width - settings.gap * (safeColumns - 1)) / safeColumns,
+    (outputSize.width - settings.gap * (frameColumns - 1)) / frameColumns,
     (outputSize.height - settings.gap * (frameRows - 1)) / frameRows
   );
-  const gridWidth = cellSize * safeColumns + settings.gap * (safeColumns - 1);
+  const gridWidth = cellSize * frameColumns + settings.gap * (frameColumns - 1);
   const gridHeight = cellSize * frameRows + settings.gap * (frameRows - 1);
   const offsetX = (outputSize.width - gridWidth) / 2;
   const offsetY = (outputSize.height - gridHeight) / 2;
@@ -249,7 +263,7 @@ function getPackedTiles(
     metrics: {
       outputWidth: outputSize.width,
       outputHeight: outputSize.height,
-      columns: safeColumns,
+      columns: frameColumns,
       rows,
       frameRows,
       cellSize,
