@@ -39,9 +39,9 @@ All processing happens entirely in the browser — no uploads, no accounts, no b
 ### Collage Maker
 
 - Upload multiple photos (2–25 images)
-- Generate collages with **simple, guided layouts**
+- Start from a simple grid and resize any tile in the preview
 - Reorder images easily
-- Select a **featured image** when supported by layout
+- Let the collage auto-pack and reflow around resized tiles
 - Live preview updates
 - Export as **JPEG or PNG**
 
@@ -110,6 +110,7 @@ npm run build
 - HEIC/HEIF images are converted locally before processing
 - Drafts and settings are saved in localStorage
 - Supports both watermarking and collage workflows
+- Collage tiles can be resized directly in the preview, with button-based fallback actions for smaller screens
 - Optimized for mobile and touch interaction
 
 ---
@@ -117,6 +118,7 @@ npm run build
 ## Limitations
 
 - Collage maker is intentionally **guided**, not a full design editor
+- Collage resizing stays snapped to the grid rather than allowing freeform placement
 - Very large images or large collage sets may impact performance on low-memory devices
 - Watermark presets do not currently bundle uploaded image files
 - Native share support depends on browser/device capabilities
@@ -163,5 +165,5 @@ I wanted a fast, simple photo tool that:
 
 - Batch watermarking
 - Image (logo) watermark presets
-- More collage layout presets
+- Smarter collage packing for more unusual span combinations
 - Additional export presets for social media

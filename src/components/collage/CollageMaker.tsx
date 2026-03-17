@@ -739,10 +739,14 @@ export function CollageMaker() {
                     </div>
                   ))}
                 </div>
-                {!canPreviewDrag && selectedImageIndex !== null && tiles[selectedImageIndex] ? (
+                {selectedImageIndex !== null && tiles[selectedImageIndex] ? (
                   <div className="mobile-photo-toolbar" aria-live="polite">
                     <p className="mobile-photo-toolbar-title">
                       {tiles[selectedImageIndex].name}
+                    </p>
+                    <p className="helper-text">
+                      Current size: {tiles[selectedImageIndex].colSpan} ×{' '}
+                      {tiles[selectedImageIndex].rowSpan}
                     </p>
                     <div className="mobile-photo-toolbar-actions">
                       <button
@@ -777,22 +781,35 @@ export function CollageMaker() {
                       >
                         2×2
                       </button>
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleMoveImage(selectedImageIndex, -1)}
-                        disabled={selectedImageIndex === 0 || isBusy}
-                      >
-                        Move Up
-                      </button>
-                      <button
-                        type="button"
-                        className="thumb-inline-button"
-                        onClick={() => handleMoveImage(selectedImageIndex, 1)}
-                        disabled={selectedImageIndex === tiles.length - 1 || isBusy}
-                      >
-                        Move Down
-                      </button>
+                    </div>
+                    {!canPreviewDrag ? (
+                      <div className="mobile-photo-toolbar-actions">
+                        <button
+                          type="button"
+                          className="thumb-inline-button"
+                          onClick={() => handleMoveImage(selectedImageIndex, -1)}
+                          disabled={selectedImageIndex === 0 || isBusy}
+                        >
+                          Move Up
+                        </button>
+                        <button
+                          type="button"
+                          className="thumb-inline-button"
+                          onClick={() => handleMoveImage(selectedImageIndex, 1)}
+                          disabled={selectedImageIndex === tiles.length - 1 || isBusy}
+                        >
+                          Move Down
+                        </button>
+                        <button
+                          type="button"
+                          className="thumb-inline-button is-danger"
+                          onClick={() => handleRemoveImage(selectedImageIndex)}
+                          disabled={isBusy}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
                         className="thumb-inline-button is-danger"
@@ -801,7 +818,7 @@ export function CollageMaker() {
                       >
                         Remove
                       </button>
-                    </div>
+                    )}
                   </div>
                 ) : null}
               </>
