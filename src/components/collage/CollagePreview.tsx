@@ -101,6 +101,7 @@ export function CollagePreview({
   const dragImageRef = useRef<HTMLImageElement | null>(null);
   const activeDragIndexRef = useRef<number | null>(null);
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
+  const [localDraggedIndex, setLocalDraggedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [hoveredEmptySlot, setHoveredEmptySlot] = useState<{ column: number; row: number } | null>(null);
   const [activeResizePreview, setActiveResizePreview] = useState<{
@@ -109,6 +110,7 @@ export function CollagePreview({
     rowSpan: number;
   } | null>(null);
   const dragOffsetRef = useRef<{ column: number; row: number }>({ column: 0, row: 0 });
+  const effectiveDraggedIndex = localDraggedIndex ?? draggedIndex;
   const resizeStateRef = useRef<{
     index: number;
     pointerId: number;
@@ -121,7 +123,7 @@ export function CollagePreview({
     nextRowSpan: number;
     maxColSpan: number;
   } | null>(null);
-  const touchDragStateRef = useRef<{
+  const pointerDragStateRef = useRef<{
     index: number;
     pointerId: number;
   } | null>(null);
@@ -238,7 +240,7 @@ export function CollagePreview({
   const emptyGridGuides = useMemo(() => {
     const occupied = new Set<string>();
     scaledCells.forEach((cell) => {
-      if (draggedIndex !== null && cell.index === draggedIndex) {
+      if (effectiveDraggedIndex !== null && cell.index === effectiveDraggedIndex) {
         return;
       }
 
@@ -250,7 +252,7 @@ export function CollagePreview({
     });
 
     return scaledGridGuides.filter((guide) => !occupied.has(`${guide.column}:${guide.row}`));
-  }, [draggedIndex, scaledCells, scaledGridGuides]);
+  }, [effectiveDraggedIndex, scaledCells, scaledGridGuides]);
 
   const guideAppearance = useMemo(() => {
     const normalizedColor = backgroundColor.trim().toLowerCase();
@@ -379,6 +381,7 @@ export function CollagePreview({
 
     setHoveredEmptySlot(null);
     activeDragIndexRef.current = index;
+    setLocalDraggedIndex(index);
     onTileDragStart?.(index);
   };
 
@@ -391,6 +394,7 @@ export function CollagePreview({
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
     activeDragIndexRef.current = null;
+    setLocalDraggedIndex(null);
     onTileDragEnd?.();
   };
 
@@ -400,12 +404,67 @@ export function CollagePreview({
     return Number.isInteger(parsedIndex) ? parsedIndex : null;
   };
 
+  const handleDesktopDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const dragIndex = getDesktopDragIndex(event);
+    if (dragIndex === null) {
+      return;
+    }
+
+    activeDragIndexRef.current = dragIndex;
+    setLocalDraggedIndex(dragIndex);
+    const target = getPointerDropTarget(event.clientX, event.clientY);
+    if (!target) {
+      setHoveredIndex(null);
+      setHoveredEmptySlot(null);
+      return;
+    }
+
+    if (target.type === 'cell') {
+      setHoveredEmptySlot(null);
+      setHoveredIndex(target.index);
+      onTileDragEnter?.(target.index);
+      return;
+    }
+
+    setHoveredIndex(null);
+    setHoveredEmptySlot({ column: target.column, row: target.row });
+  };
+
+  const handleDesktopDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const dragIndex = getDesktopDragIndex(event);
+    if (dragIndex === null) {
+      return;
+    }
+
+    const target = getPointerDropTarget(event.clientX, event.clientY);
+    if (!target) {
+      handleTileDragEnd();
+      return;
+    }
+
+    if (target.type === 'cell') {
+      const draggedCell = scaledCells.find((cell) => cell.index === dragIndex);
+      handleEmptySlotDrop(
+        dragIndex,
+        target.column,
+        target.row,
+        draggedCell?.colSpan ?? 1,
+        draggedCell?.rowSpan ?? 1
+      );
+      return;
+    }
+
+    handleEmptySlotDrop(dragIndex, target.column, target.row);
+  };
+
   const draggedPreviewRect = useMemo(() => {
-    if (draggedIndex === null || !previewMetrics) {
+    if (effectiveDraggedIndex === null || !previewMetrics) {
       return null;
     }
 
-    const draggedCell = scaledCells.find((cell) => cell.index === draggedIndex);
+    const draggedCell = scaledCells.find((cell) => cell.index === effectiveDraggedIndex);
     if (!draggedCell) {
       return null;
     }
@@ -451,7 +510,7 @@ export function CollagePreview({
     canvasRef,
     displaySize.height,
     displaySize.width,
-    draggedIndex,
+    effectiveDraggedIndex,
     dropTargetIndex,
     gap,
     hoveredEmptySlot,
@@ -482,7 +541,7 @@ export function CollagePreview({
 
     const cellTarget = scaledCells.find(
       (cell) =>
-        cell.index !== draggedIndex &&
+        cell.index !== effectiveDraggedIndex &&
         relativeX >= cell.x &&
         relativeX <= cell.x + cell.width &&
         relativeY >= cell.y &&
@@ -513,12 +572,16 @@ export function CollagePreview({
     return null;
   };
 
-  const handleTouchDragStart = (
+  const handlePointerDragStart = (
     event: ReactPointerEvent<HTMLDivElement>,
     index: number,
     cell: (typeof scaledCells)[number]
   ) => {
-    if (!allowTouchMove || event.pointerType === 'mouse') {
+    if (!isInteractive) {
+      return;
+    }
+
+    if (event.pointerType === 'mouse' && event.button !== 0) {
       return;
     }
 
@@ -532,16 +595,17 @@ export function CollagePreview({
         }
       : { column: 0, row: 0 };
     activeDragIndexRef.current = index;
-    touchDragStateRef.current = { index, pointerId: event.pointerId };
+    setLocalDraggedIndex(index);
+    pointerDragStateRef.current = { index, pointerId: event.pointerId };
     setHoveredEmptySlot(null);
     onTileSelect?.(index);
     onTileDragStart?.(index);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const handleTouchDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const touchState = touchDragStateRef.current;
-    if (!touchState || touchState.pointerId !== event.pointerId) {
+  const handlePointerDragMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const dragState = pointerDragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
       return;
     }
 
@@ -563,54 +627,56 @@ export function CollagePreview({
     setHoveredEmptySlot({ column: target.column, row: target.row });
   };
 
-  const handleTouchDragEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const touchState = touchDragStateRef.current;
-    if (!touchState || touchState.pointerId !== event.pointerId) {
+  const handlePointerDragEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const dragState = pointerDragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
       return;
     }
 
     const target = getPointerDropTarget(event.clientX, event.clientY);
-    if (event.pointerId === touchState.pointerId) {
+    if (event.pointerId === dragState.pointerId) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
     if (target?.type === 'cell') {
-      const draggedCell = scaledCells.find((cell) => cell.index === touchState.index);
+      const draggedCell = scaledCells.find((cell) => cell.index === dragState.index);
       handleEmptySlotDrop(
-        touchState.index,
+        dragState.index,
         target.column,
         target.row,
         draggedCell?.colSpan ?? 1,
         draggedCell?.rowSpan ?? 1
       );
     } else if (target?.type === 'empty') {
-      handleEmptySlotDrop(touchState.index, target.column, target.row);
+      handleEmptySlotDrop(dragState.index, target.column, target.row);
     } else {
       onTileDragEnd?.();
     }
 
-    touchDragStateRef.current = null;
+    pointerDragStateRef.current = null;
     setHoveredIndex(null);
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
     activeDragIndexRef.current = null;
+    setLocalDraggedIndex(null);
   };
 
-  const handleTouchDragCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const touchState = touchDragStateRef.current;
-    if (!touchState || touchState.pointerId !== event.pointerId) {
+  const handlePointerDragCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const dragState = pointerDragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
       return;
     }
 
-    if (event.pointerId === touchState.pointerId) {
+    if (event.pointerId === dragState.pointerId) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
 
-    touchDragStateRef.current = null;
+    pointerDragStateRef.current = null;
     setHoveredIndex(null);
     setHoveredEmptySlot(null);
     dragOffsetRef.current = { column: 0, row: 0 };
     activeDragIndexRef.current = null;
+    setLocalDraggedIndex(null);
     onTileDragEnd?.();
   };
 
@@ -755,7 +821,12 @@ export function CollagePreview({
         {hasImages ? <span className="dimension-badge">{imageCount} photos</span> : null}
       </div>
 
-      <div ref={shellRef} className="preview-shell collage-preview-shell">
+      <div
+        ref={shellRef}
+        className="preview-shell collage-preview-shell"
+        onDragOver={handleDesktopDragOver}
+        onDrop={handleDesktopDrop}
+      >
         {hasImages ? (
           canBuild ? (
             <>
@@ -791,7 +862,7 @@ export function CollagePreview({
                       }}
                     />
                   ))}
-                  {draggedIndex !== null
+                  {effectiveDraggedIndex !== null
                     ? emptyGridGuides.map((guide) => (
                         <button
                           key={`empty-${guide.column}-${guide.row}`}
@@ -827,15 +898,6 @@ export function CollagePreview({
                           tabIndex={-1}
                           onDragEnter={() => setHoveredEmptySlot({ column: guide.column, row: guide.row })}
                           onDragOver={(event) => event.preventDefault()}
-                          onDrop={(event) => {
-                            event.preventDefault();
-                            const dragIndex = getDesktopDragIndex(event);
-                            if (dragIndex === null) {
-                              return;
-                            }
-
-                            handleEmptySlotDrop(dragIndex, guide.column, guide.row);
-                          }}
                         />
                       ))
                     : null}
@@ -859,9 +921,9 @@ export function CollagePreview({
                       className={`preview-dropzone ${
                         selectedIndex === index ? 'is-selected' : ''
                       } ${
-                        draggedIndex === index ? 'is-dragging' : ''
-                      } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''} ${
-                        hoveredIndex === index && draggedIndex === null ? 'is-hovered' : ''
+                        effectiveDraggedIndex === index ? 'is-dragging' : ''
+                      } ${dropTargetIndex === index && effectiveDraggedIndex !== index ? 'is-drop-target' : ''} ${
+                        hoveredIndex === index && effectiveDraggedIndex === null ? 'is-hovered' : ''
                       } ${
                         activeResizePreview?.index === index ? 'is-resize-preview' : ''
                       } ${
@@ -876,7 +938,7 @@ export function CollagePreview({
                         height: `${cell.height}px`,
                         borderRadius: `${cell.borderRadius}px`
                       }}
-                      draggable={isInteractive && !allowTouchMove}
+                      draggable={false}
                       tabIndex={0}
                       onClick={() => onTileSelect?.(index)}
                       onKeyDown={(event) => {
@@ -891,26 +953,11 @@ export function CollagePreview({
                         onTileDragEnter?.(index);
                       }}
                       onDragOver={(event) => event.preventDefault()}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        const dragIndex = getDesktopDragIndex(event);
-                        if (dragIndex === null) {
-                          return;
-                        }
-
-                        handleEmptySlotDrop(
-                          dragIndex,
-                          cell.column,
-                          cell.row,
-                          cell.colSpan,
-                          cell.rowSpan
-                        );
-                      }}
                       onDragEnd={handleTileDragEnd}
-                      onPointerDown={(event) => handleTouchDragStart(event, index, cell)}
-                      onPointerMove={handleTouchDragMove}
-                      onPointerUp={handleTouchDragEnd}
-                      onPointerCancel={handleTouchDragCancel}
+                      onPointerDown={(event) => handlePointerDragStart(event, index, cell)}
+                      onPointerMove={handlePointerDragMove}
+                      onPointerUp={handlePointerDragEnd}
+                      onPointerCancel={handlePointerDragCancel}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
