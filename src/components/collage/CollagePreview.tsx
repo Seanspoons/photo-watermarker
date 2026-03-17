@@ -67,6 +67,11 @@ export function CollagePreview({
   const dragImageRef = useRef<HTMLImageElement | null>(null);
   const [displaySize, setDisplaySize] = useState({ width: 0, height: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeResizePreview, setActiveResizePreview] = useState<{
+    index: number;
+    colSpan: number;
+    rowSpan: number;
+  } | null>(null);
   const resizeStateRef = useRef<{
     index: number;
     pointerId: number;
@@ -148,6 +153,36 @@ export function CollagePreview({
     };
   }, [scaledCells]);
 
+  const scaledGridGuides = useMemo(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !previewMetrics || displaySize.width === 0 || displaySize.height === 0) {
+      return [];
+    }
+
+    const scaleX = displaySize.width / canvas.width;
+    const scaleY = displaySize.height / canvas.height;
+    const stepWidth = previewMetrics.cellSize * scaleX;
+    const stepHeight = previewMetrics.cellSize * scaleY;
+    const scaledGapX = gap * scaleX;
+    const scaledGapY = gap * scaleY;
+    const offsetX = ((canvas.width - previewMetrics.gridWidth) / 2) * scaleX;
+    const offsetY = ((canvas.height - previewMetrics.gridHeight) / 2) * scaleY;
+    const guides: Array<{ x: number; y: number; width: number; height: number }> = [];
+
+    for (let row = 0; row < previewMetrics.frameRows; row += 1) {
+      for (let column = 0; column < previewMetrics.columns; column += 1) {
+        guides.push({
+          x: offsetX + column * (stepWidth + scaledGapX),
+          y: offsetY + row * (stepHeight + scaledGapY),
+          width: stepWidth,
+          height: stepHeight
+        });
+      }
+    }
+
+    return guides;
+  }, [canvasRef, displaySize.height, displaySize.width, gap, previewMetrics]);
+
   const handleTileDragStart = (event: DragEvent<HTMLButtonElement>, index: number) => {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(index));
@@ -208,6 +243,11 @@ export function CollagePreview({
       nextRowSpan: cell.rowSpan,
       maxColSpan: Math.max(1, previewMetrics.columns - cell.column)
     };
+    setActiveResizePreview({
+      index: cell.index,
+      colSpan: cell.colSpan,
+      rowSpan: cell.rowSpan
+    });
     onTileSelect?.(cell.index);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
@@ -262,6 +302,11 @@ export function CollagePreview({
 
     resizeState.nextColSpan = nextColSpan;
     resizeState.nextRowSpan = nextRowSpan;
+    setActiveResizePreview({
+      index: resizeState.index,
+      colSpan: nextColSpan,
+      rowSpan: nextRowSpan
+    });
     onTileResizePreview?.(resizeState.index, nextColSpan, nextRowSpan);
   };
 
@@ -277,6 +322,7 @@ export function CollagePreview({
 
     onTileResizeCommit?.(resizeState.index, resizeState.nextColSpan, resizeState.nextRowSpan);
     resizeStateRef.current = null;
+    setActiveResizePreview(null);
   };
 
   const handleResizeCancel = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -290,6 +336,7 @@ export function CollagePreview({
     }
 
     resizeStateRef.current = null;
+    setActiveResizePreview(null);
     onTileResizeCancel?.();
   };
 
@@ -323,6 +370,18 @@ export function CollagePreview({
                     height: `${displaySize.height}px`
                   }}
                 >
+                  {scaledGridGuides.map((guide, index) => (
+                    <span
+                      key={`guide-${index}`}
+                      className="preview-grid-guide"
+                      style={{
+                        left: `${guide.x}px`,
+                        top: `${guide.y}px`,
+                        width: `${guide.width}px`,
+                        height: `${guide.height}px`
+                      }}
+                    />
+                  ))}
                   {scaledCells.map((cell, index) => (
                     <button
                       key={`${cell.x}-${cell.y}-${index}`}
@@ -333,6 +392,12 @@ export function CollagePreview({
                         draggedIndex === index ? 'is-dragging' : ''
                       } ${dropTargetIndex === index && draggedIndex !== index ? 'is-drop-target' : ''} ${
                         hoveredIndex === index && draggedIndex === null ? 'is-hovered' : ''
+                      } ${
+                        activeResizePreview?.index === index ? 'is-resize-preview' : ''
+                      } ${
+                        activeResizePreview && activeResizePreview.index !== index
+                          ? 'is-resize-background'
+                          : ''
                       }`}
                       style={{
                         left: `${cell.x}px`,
@@ -353,7 +418,9 @@ export function CollagePreview({
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
                       <span className="preview-dropzone-label">
-                        Drag to move
+                        {activeResizePreview?.index === index
+                          ? `${activeResizePreview.colSpan} × ${activeResizePreview.rowSpan}`
+                          : 'Drag to move'}
                       </span>
                       <button
                         type="button"
