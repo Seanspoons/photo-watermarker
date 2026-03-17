@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ConfirmModal } from '../ConfirmModal';
+import { FloatingMessage } from '../FloatingMessage';
 import { PreviewCanvas } from '../PreviewCanvas';
 import { UploadPanel } from '../UploadPanel';
 import { WatermarkControls } from '../WatermarkControls';
@@ -468,8 +469,12 @@ export function WatermarkTool() {
         </div>
       </section>
 
-      {errorMessage ? <div className="message error-message">{errorMessage}</div> : null}
-      {statusMessage ? <div className="message status-message">{statusMessage}</div> : null}
+      {errorMessage || statusMessage ? (
+        <div className="floating-message-stack">
+          {errorMessage ? <FloatingMessage tone="error" message={errorMessage} /> : null}
+          {statusMessage ? <FloatingMessage tone="status" message={statusMessage} /> : null}
+        </div>
+      ) : null}
 
       <section className="layout-grid watermark-layout-grid">
         <div className="left-column">

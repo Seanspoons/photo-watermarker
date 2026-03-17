@@ -1427,6 +1427,26 @@ select:disabled {
   text-align: right;
 }
 
+.floating-message-stack {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 36px));
+  pointer-events: none;
+}
+
+.floating-message {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 36px rgba(33, 43, 36, 0.14);
+  backdrop-filter: blur(12px);
+}
+
 .status-message {
   color: var(--accent);
 }
@@ -1450,6 +1470,13 @@ select:disabled {
 @media (max-width: 920px) {
   .app-shell {
     padding: 16px;
+  }
+
+  .floating-message-stack {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
   }
 
   .hero-copy-block,
