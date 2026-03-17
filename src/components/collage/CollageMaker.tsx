@@ -1356,149 +1356,159 @@ export function CollageMaker() {
 
       <section className="layout-grid collage-layout-grid">
         <div className="left-column">
-          <CollageUploadPanel
-            onFilesSelect={handleFilesSelect}
-            disabled={isBusy}
-            imageCount={tiles.length}
-          />
-          <div className="preview-sticky-wrap">
-            <CollagePreview
-              stepLabel="Step 3"
-              title="Arrange"
-              panelClassName="collage-arrange-panel"
-              canvasRef={previewCanvasRef}
-              hasImages={tiles.length > 0}
+          <div className="collage-mobile-step collage-mobile-step-upload">
+            <CollageUploadPanel
+              onFilesSelect={handleFilesSelect}
+              disabled={isBusy}
               imageCount={tiles.length}
-              canBuild={canBuildCollage}
-              helperText={previewHelperText}
-              headerActionsSlot={canBuildCollage ? arrangeHeaderActions : null}
-              previewCells={packedPreviewTiles}
-              previewMetrics={previewMetrics}
-              gap={settings.gap}
-              backgroundColor={settings.backgroundColor}
-              previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
-              previewImageUrls={tiles.map((tile) => tile.objectUrl)}
-              controlsSlot={
-                canTouchPreviewMove && selectedImageIndex !== null
-                  ? renderSelectedTileActions(true)
-                  : null
-              }
-              isInteractive={(canPreviewDrag || canTouchPreviewMove) && canBuildCollage && !isBusy}
-              allowTouchMove={canTouchPreviewMove && canBuildCollage && !isBusy}
-              selectedIndex={selectedImageIndex ?? undefined}
-              draggedIndex={draggedIndex}
-              dropTargetIndex={dropTargetIndex}
-              onTileSelect={setSelectedImageIndex}
-              onTileDragStart={handleDragStart}
-              onTileDragEnter={handleDragEnter}
-              onTileDropAt={(index, column, row) => {
-                moveTileToAnchor(index, column, row);
-              }}
-              onTileDragEnd={handleDragEnd}
-              onTileResizePreview={handleResizePreview}
-              onTileResizeCommit={handleResizeCommit}
-              onTileResizeCancel={handleResizeCancel}
             />
+          </div>
+          <div className="collage-mobile-step collage-mobile-step-arrange">
+            <div className="preview-sticky-wrap">
+              <CollagePreview
+                stepLabel="Step 3"
+                title="Arrange"
+                panelClassName="collage-arrange-panel"
+                canvasRef={previewCanvasRef}
+                hasImages={tiles.length > 0}
+                imageCount={tiles.length}
+                canBuild={canBuildCollage}
+                helperText={previewHelperText}
+                headerActionsSlot={canBuildCollage ? arrangeHeaderActions : null}
+                previewCells={packedPreviewTiles}
+                previewMetrics={previewMetrics}
+                gap={settings.gap}
+                backgroundColor={settings.backgroundColor}
+                previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
+                previewImageUrls={tiles.map((tile) => tile.objectUrl)}
+                controlsSlot={
+                  canTouchPreviewMove && selectedImageIndex !== null
+                    ? renderSelectedTileActions(true)
+                    : null
+                }
+                isInteractive={(canPreviewDrag || canTouchPreviewMove) && canBuildCollage && !isBusy}
+                allowTouchMove={canTouchPreviewMove && canBuildCollage && !isBusy}
+                selectedIndex={selectedImageIndex ?? undefined}
+                draggedIndex={draggedIndex}
+                dropTargetIndex={dropTargetIndex}
+                onTileSelect={setSelectedImageIndex}
+                onTileDragStart={handleDragStart}
+                onTileDragEnter={handleDragEnter}
+                onTileDropAt={(index, column, row) => {
+                  moveTileToAnchor(index, column, row);
+                }}
+                onTileDragEnd={handleDragEnd}
+                onTileResizePreview={handleResizePreview}
+                onTileResizeCommit={handleResizeCommit}
+                onTileResizeCancel={handleResizeCancel}
+              />
+            </div>
           </div>
         </div>
 
         <div className="right-column">
-          <CollageControls
-            settings={settings}
-            presetName={presetName}
-            savedPresets={savedPresets}
-            canUndo={canUndo}
-            canRedo={canRedo}
-            layoutWarning={layoutAdvice.message}
-            warningActions={layoutAdvice.actions.map((action) => ({
-              label: action.label,
-              onClick: () => {
-                action.apply();
-                setStatusMessage(`${action.label} applied.`);
-              }
-            }))}
-            disabled={isBusy}
-            onPresetNameChange={setPresetName}
-            onSavePreset={handleSavePreset}
-            onApplyPreset={handleApplyPreset}
-            onDeletePreset={handleDeletePreset}
-            onAutoArrange={handleAutoArrange}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            onChange={handleSettingsChange}
-            onReset={() => setConfirmAction('reset')}
-          />
+          <div className="collage-mobile-step collage-mobile-step-controls">
+            <CollageControls
+              settings={settings}
+              presetName={presetName}
+              savedPresets={savedPresets}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              layoutWarning={layoutAdvice.message}
+              warningActions={layoutAdvice.actions.map((action) => ({
+                label: action.label,
+                onClick: () => {
+                  action.apply();
+                  setStatusMessage(`${action.label} applied.`);
+                }
+              }))}
+              disabled={isBusy}
+              onPresetNameChange={setPresetName}
+              onSavePreset={handleSavePreset}
+              onApplyPreset={handleApplyPreset}
+              onDeletePreset={handleDeletePreset}
+              onAutoArrange={handleAutoArrange}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onChange={handleSettingsChange}
+              onReset={() => setConfirmAction('reset')}
+            />
+          </div>
 
-          <section className="panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Step 4</p>
-                <h2>Export</h2>
-              </div>
-            </div>
-            {canBuildCollage ? (
-              <div className="export-preview-block">
-                <p className="helper-text export-preview-label">Preview</p>
-                <div className="preview-shell collage-preview-shell export-preview-shell">
-                  <canvas
-                    ref={exportPreviewCanvasRef}
-                    className="preview-canvas collage-preview-canvas"
-                    aria-label="Final collage preview"
-                  />
-                </div>
-                <div className="tip-note panel-description panel-description-tight" role="note">
-                  <span className="tip-note-icon" aria-hidden="true">
-                    i
-                  </span>
-                  <p className="helper-text">
-                    This is the clean saved version without the arrange handles and guides.
-                  </p>
+          <div className="collage-mobile-step collage-mobile-step-export">
+            <section className="panel">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Step 4</p>
+                  <h2>Export</h2>
                 </div>
               </div>
-            ) : null}
-            <div className="export-actions">
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => handleExport('jpeg', 'download')}
-                disabled={!canBuildCollage || isBusy}
-              >
-                Save JPEG
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={() => handleExport('png', 'download')}
-                disabled={!canBuildCollage || isBusy}
-              >
-                Save PNG
-              </button>
-              {canNativeShare ? (
+              {canBuildCollage ? (
+                <div className="export-preview-block">
+                  <p className="helper-text export-preview-label">Preview</p>
+                  <div className="preview-shell collage-preview-shell export-preview-shell">
+                    <canvas
+                      ref={exportPreviewCanvasRef}
+                      className="preview-canvas collage-preview-canvas"
+                      aria-label="Final collage preview"
+                    />
+                  </div>
+                  <div className="tip-note panel-description panel-description-tight" role="note">
+                    <span className="tip-note-icon" aria-hidden="true">
+                      i
+                    </span>
+                    <p className="helper-text">
+                      This is the clean saved version without the arrange handles and guides.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+              <div className="export-actions">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => handleExport('jpeg', 'download')}
+                  disabled={!canBuildCollage || isBusy}
+                >
+                  Save JPEG
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => handleExport('png', 'download')}
+                  disabled={!canBuildCollage || isBusy}
+                >
+                  Save PNG
+                </button>
+                {canNativeShare ? (
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => handleExport('jpeg', 'share')}
+                    disabled={!canBuildCollage || isBusy}
+                  >
+                    Share / Save to Photos
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="ghost-button"
-                  onClick={() => handleExport('jpeg', 'share')}
-                  disabled={!canBuildCollage || isBusy}
+                  onClick={() => setConfirmAction('clear')}
+                  disabled={tiles.length === 0 || isBusy}
                 >
-                  Share / Save to Photos
+                  Start a New Collage
                 </button>
-              ) : null}
-              <button
-                type="button"
-                className="ghost-button"
-                onClick={() => setConfirmAction('clear')}
-                disabled={tiles.length === 0 || isBusy}
-              >
-                Start a New Collage
-              </button>
-            </div>
-            <div className="tip-note panel-description panel-description-tight" role="note">
-              <span className="tip-note-icon" aria-hidden="true">
-                i
-              </span>
-              <p className="helper-text">Collages export at the full preset size exactly as arranged.</p>
-            </div>
-          </section>
+              </div>
+              <div className="tip-note panel-description panel-description-tight" role="note">
+                <span className="tip-note-icon" aria-hidden="true">
+                  i
+                </span>
+                <p className="helper-text">
+                  Collages export at the full preset size exactly as arranged.
+                </p>
+              </div>
+            </section>
+          </div>
         </div>
       </section>
 

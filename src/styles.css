@@ -1771,6 +1771,27 @@ select:disabled {
   .suite-grid {
     grid-template-columns: 1fr;
   }
+
+  .collage-layout-grid > .left-column,
+  .collage-layout-grid > .right-column {
+    display: contents;
+  }
+
+  .collage-mobile-step-upload {
+    order: 1;
+  }
+
+  .collage-mobile-step-controls {
+    order: 2;
+  }
+
+  .collage-mobile-step-arrange {
+    order: 3;
+  }
+
+  .collage-mobile-step-export {
+    order: 4;
+  }
 }
 
 @media (min-width: 921px) {
