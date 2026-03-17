@@ -1,4 +1,5 @@
 import {
+  ReactNode,
   DragEvent,
   PointerEvent as ReactPointerEvent,
   RefObject,
@@ -22,6 +23,7 @@ interface CollagePreviewProps {
   canBuild: boolean;
   helperText?: string;
   exportFrameNote?: string;
+  controlsSlot?: ReactNode;
   previewCells?: CollagePackedTile[];
   previewMetrics?: CollageLayoutMetrics | null;
   gap?: number;
@@ -53,6 +55,7 @@ export function CollagePreview({
   canBuild,
   helperText,
   exportFrameNote,
+  controlsSlot,
   previewCells = [],
   previewMetrics = null,
   gap = 0,
@@ -803,6 +806,8 @@ export function CollagePreview({
           </div>
         )}
       </div>
+
+      {controlsSlot}
 
       {helperText && canBuild ? (
         <div className="preview-footer">

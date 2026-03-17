@@ -651,73 +651,36 @@ export function CollageMaker() {
         <p className="helper-text">
           Current size: {selectedTile.colSpan} × {selectedTile.rowSpan}
         </p>
-        {canTouchPreviewMove ? (
-          <div className="arrange-slider-grid">
-            <label className="field">
-              <span>Width ({selectedTile.colSpan})</span>
-              <input
-                type="range"
-                min="1"
-                max={String(MAX_COLLAGE_COLUMNS)}
-                step="1"
-                value={selectedTile.colSpan}
-                onChange={(event) =>
-                  handleResizeTile(selectedImageIndex, Number(event.target.value), selectedTile.rowSpan)
-                }
-                disabled={isBusy}
-              />
-            </label>
-            <label className="field">
-              <span>Height ({selectedTile.rowSpan})</span>
-              <input
-                type="range"
-                min="1"
-                max="8"
-                step="1"
-                value={selectedTile.rowSpan}
-                onChange={(event) =>
-                  handleResizeTile(selectedImageIndex, selectedTile.colSpan, Number(event.target.value))
-                }
-                disabled={isBusy}
-              />
-            </label>
-          </div>
-        ) : (
-          <div className="mobile-photo-toolbar-actions">
-            <button
-              type="button"
-              className="thumb-inline-button"
-              onClick={() => handleResizeTile(selectedImageIndex, 1, 1)}
+        <div className="arrange-slider-grid">
+          <label className="field">
+            <span>Width ({selectedTile.colSpan})</span>
+            <input
+              type="range"
+              min="1"
+              max={String(MAX_COLLAGE_COLUMNS)}
+              step="1"
+              value={selectedTile.colSpan}
+              onChange={(event) =>
+                handleResizeTile(selectedImageIndex, Number(event.target.value), selectedTile.rowSpan)
+              }
               disabled={isBusy}
-            >
-              1×1
-            </button>
-            <button
-              type="button"
-              className="thumb-inline-button"
-              onClick={() => handleResizeTile(selectedImageIndex, 2, 1)}
+            />
+          </label>
+          <label className="field">
+            <span>Height ({selectedTile.rowSpan})</span>
+            <input
+              type="range"
+              min="1"
+              max="8"
+              step="1"
+              value={selectedTile.rowSpan}
+              onChange={(event) =>
+                handleResizeTile(selectedImageIndex, selectedTile.colSpan, Number(event.target.value))
+              }
               disabled={isBusy}
-            >
-              2×1
-            </button>
-            <button
-              type="button"
-              className="thumb-inline-button"
-              onClick={() => handleResizeTile(selectedImageIndex, 1, 2)}
-              disabled={isBusy}
-            >
-              1×2
-            </button>
-            <button
-              type="button"
-              className="thumb-inline-button"
-              onClick={() => handleResizeTile(selectedImageIndex, 2, 2)}
-              disabled={isBusy}
-            >
-              2×2
-            </button>
-          </div>
-        )}
+            />
+          </label>
+        </div>
         <button
           type="button"
           className="thumb-inline-button is-danger"
@@ -940,6 +903,7 @@ export function CollageMaker() {
               backgroundColor={settings.backgroundColor}
               previewCornerRadius={settings.fitMode === 'cover' ? settings.cornerRadius : 0}
               previewImageUrls={tiles.map((tile) => tile.objectUrl)}
+              controlsSlot={selectedImageIndex !== null ? renderSelectedTileActions(true) : null}
               isInteractive={(canPreviewDrag || canTouchPreviewMove) && canBuildCollage && !isBusy}
               allowTouchMove={canTouchPreviewMove && canBuildCollage && !isBusy}
               selectedIndex={selectedImageIndex ?? undefined}
@@ -955,7 +919,6 @@ export function CollageMaker() {
               onTileResizeCommit={handleResizeCommit}
               onTileResizeCancel={handleResizeCancel}
             />
-            {selectedImageIndex !== null ? renderSelectedTileActions(true) : null}
           </div>
         </div>
 
