@@ -417,25 +417,34 @@ export function CollageMaker() {
   ) => {
     if (key === 'columns') {
       const nextColumns = value as number;
+      const anchoredTiles = anchorTilesToCurrentLayout(tiles);
+      const compactedTiles = anchoredTiles.map((tile) => {
+        if (tile.gridColumn === null || tile.gridRow === null) {
+          return tile;
+        }
 
-      setTiles((current) => {
-        const anchoredTiles = anchorTilesToCurrentLayout(current);
-        return anchoredTiles.map((tile) => {
-          if (tile.gridColumn === null || tile.gridRow === null) {
-            return tile;
-          }
+        if (tile.gridColumn + tile.colSpan <= nextColumns) {
+          return tile;
+        }
 
-          if (tile.gridColumn + tile.colSpan <= nextColumns) {
-            return tile;
-          }
-
-          return {
-            ...tile,
-            gridColumn: null,
-            gridRow: null
-          };
-        });
+        return {
+          ...tile,
+          gridColumn: null,
+          gridRow: null
+        };
       });
+
+      const isSquareOutput =
+        settings.sizePreset === 'instagram-square' || settings.sizePreset === 'high-res-square';
+      if (isSquareOutput && nextColumns < settings.columns) {
+        const nextMetrics = getCollageLayoutMetrics(compactedTiles, { ...settings, columns: nextColumns });
+        if (nextMetrics.rows > nextColumns) {
+          setStatusMessage(`This collage cannot fit into a ${nextColumns} × ${nextColumns} square yet.`);
+          return;
+        }
+      }
+
+      setTiles(compactedTiles);
       setSettings((current) => ({ ...current, [key]: value }));
       setStatusMessage(`Set the grid to ${nextColumns} columns.`);
       return;
