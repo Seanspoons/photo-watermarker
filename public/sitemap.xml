@@ -22,10 +22,16 @@
     <loc>https://simplephototools.com/crop</loc>
   </url>
   <url>
+    <loc>https://simplephototools.com/metadata</loc>
+  </url>
+  <url>
     <loc>https://simplephototools.com/resize-image-online</loc>
   </url>
   <url>
     <loc>https://simplephototools.com/compress-image-online</loc>
+  </url>
+  <url>
+    <loc>https://simplephototools.com/remove-photo-metadata</loc>
   </url>
   <url>
     <loc>https://simplephototools.com/crop-image-online</loc>

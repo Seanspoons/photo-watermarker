@@ -67,6 +67,14 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     image: 'https://simplephototools.com/og-crop.png',
     imageAlt: 'Crop Tool preview card'
   },
+  '/metadata': {
+    title: 'Remove Metadata | Strip Hidden Photo Details in Your Browser',
+    description:
+      'Review and remove hidden photo metadata like location, camera, and capture details right in your browser with private client-side export.',
+    canonicalPath: '/metadata',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Remove Metadata tool preview card'
+  },
   '/resize-image-online': {
     title: 'Resize Image Online | Free Browser-Based Photo Resizer',
     description:
@@ -114,6 +122,14 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     canonicalPath: '/add-watermark-to-photo',
     image: 'https://simplephototools.com/og-watermarker.png',
     imageAlt: 'Add watermark to photo landing page preview'
+  },
+  '/remove-photo-metadata': {
+    title: 'Remove Photo Metadata | Free Browser-Based Metadata Cleaner',
+    description:
+      'Remove photo metadata in your browser, including location, camera, and capture details, and save a cleaned copy with no uploads.',
+    canonicalPath: '/remove-photo-metadata',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Remove photo metadata landing page preview'
   },
   '/make-photo-collage-online': {
     title: 'Make Photo Collage Online | Free Browser-Based Collage Maker',

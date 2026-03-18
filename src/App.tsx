@@ -20,6 +20,7 @@ type AppRoute =
   | '/rotate'
   | '/social'
   | '/metadata'
+  | '/remove-photo-metadata'
   | '/resize-image-online'
   | '/compress-image-online'
   | '/crop-image-online'
@@ -155,6 +156,7 @@ function normalizeRoute(pathname: string): AppRoute {
     cleanPath === '/rotate' ||
     cleanPath === '/social' ||
     cleanPath === '/metadata' ||
+    cleanPath === '/remove-photo-metadata' ||
     cleanPath === '/resize-image-online' ||
     cleanPath === '/compress-image-online' ||
     cleanPath === '/crop-image-online' ||
@@ -334,7 +336,7 @@ function RouteIntro({
               ? 'Image Compressor'
               : route === '/crop' || route === '/crop-image-online'
                 ? 'Crop Tool'
-                : route === '/metadata'
+                : route === '/metadata' || route === '/remove-photo-metadata'
                   ? 'Remove Metadata'
         : 'Coming Soon';
 
@@ -638,6 +640,22 @@ export default function App() {
             bulletC="Private in browser"
             ctaLabel="Open Watermarker"
             ctaPath="/watermarker"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
+      case '/remove-photo-metadata':
+        return (
+          <LandingPage
+            eyebrow="Remove Photo Metadata"
+            title="Remove photo metadata before you share an image."
+            copy="Review hidden details like camera, date, and location data, then save a cleaned copy right in your browser."
+            bulletA="Metadata review"
+            bulletB="Privacy focused"
+            bulletC="Private in browser"
+            ctaLabel="Open Remove Metadata"
+            ctaPath="/metadata"
             secondaryLabel="Go Home"
             secondaryPath="/"
             onNavigate={navigateTo}

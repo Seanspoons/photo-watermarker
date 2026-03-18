@@ -18,10 +18,12 @@ export default defineConfig(() => {
           resize: resolve(__dirname, 'resize/index.html'),
           compress: resolve(__dirname, 'compress/index.html'),
           crop: resolve(__dirname, 'crop/index.html'),
+          metadata: resolve(__dirname, 'metadata/index.html'),
           resizeImageOnline: resolve(__dirname, 'resize-image-online/index.html'),
           compressImageOnline: resolve(__dirname, 'compress-image-online/index.html'),
           cropImageOnline: resolve(__dirname, 'crop-image-online/index.html'),
           convertImageOnline: resolve(__dirname, 'convert-image-online/index.html'),
+          removePhotoMetadata: resolve(__dirname, 'remove-photo-metadata/index.html'),
           convertHeicToJpg: resolve(__dirname, 'convert-heic-to-jpg/index.html'),
           addWatermarkToPhoto: resolve(__dirname, 'add-watermark-to-photo/index.html'),
           makePhotoCollageOnline: resolve(__dirname, 'make-photo-collage-online/index.html')
