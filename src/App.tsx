@@ -1023,13 +1023,13 @@ export default function App() {
             <div>
               <p className="site-footer-title">Simple Photo Tools</p>
               <p className="site-footer-copy">
-                Free photo tools that run in your browser, with no accounts and no uploads to our
-                server.
+                Free browser-based photo tools for editing, formatting, and privacy, with no
+                accounts and no uploads to our server.
               </p>
             </div>
           </div>
           <p className="site-footer-meta">
-            © 2026 Simple Photo Tools. Watermarks, collages, and future tools stay on your device.
+            © 2026 Simple Photo Tools. Your edits stay on your device.
           </p>
         </div>
       </footer>
