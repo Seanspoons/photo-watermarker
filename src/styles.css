@@ -1740,6 +1740,10 @@ select:disabled {
   line-height: 1.45;
 }
 
+.rotate-action-grid + .export-actions {
+  margin-top: 14px;
+}
+
 .field {
   display: grid;
   gap: 8px;
