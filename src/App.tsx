@@ -16,7 +16,9 @@ type AppRoute =
   | '/collage'
   | '/resize'
   | '/compress'
+  | '/blur'
   | '/border'
+  | '/background-remover'
   | '/convert'
   | '/crop'
   | '/rotate'
@@ -44,7 +46,9 @@ interface ToolCard {
     | 'collage'
     | 'resize'
     | 'compress'
+    | 'blur'
     | 'border'
+    | 'background'
     | 'convert'
     | 'crop'
     | 'rotate'
@@ -98,6 +102,14 @@ const TOOL_CARDS: ToolCard[] = [
     icon: 'compress'
   },
   {
+    path: '/blur',
+    name: 'Blur / Pixelate',
+    description: 'Blur or pixelate part of an image before saving.',
+    blurb: 'Useful for hiding faces, details, or private information.',
+    status: 'soon',
+    icon: 'blur'
+  },
+  {
     path: '/convert',
     name: 'Image Converter',
     description: 'Convert between JPG, PNG, and WebP formats.',
@@ -144,6 +156,14 @@ const TOOL_CARDS: ToolCard[] = [
     blurb: 'Useful for product shots and social posts.',
     status: 'soon',
     icon: 'border'
+  },
+  {
+    path: '/background-remover',
+    name: 'Background Remover',
+    description: 'Remove image backgrounds for cleaner cutouts.',
+    blurb: 'Helpful for product photos, portraits, and simple graphics.',
+    status: 'soon',
+    icon: 'background'
   }
 ];
 
@@ -156,7 +176,9 @@ function normalizeRoute(pathname: string): AppRoute {
   if (
     cleanPath === '/resize' ||
     cleanPath === '/compress' ||
+    cleanPath === '/blur' ||
     cleanPath === '/border' ||
+    cleanPath === '/background-remover' ||
     cleanPath === '/convert' ||
     cleanPath === '/crop' ||
     cleanPath === '/rotate' ||
@@ -228,6 +250,17 @@ function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
             <path d="M27 26v20" className="icon-accent-stroke" />
             <path d="M37 30v12" className="icon-accent-stroke" />
             <path d="M47 34v4" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'blur' ? (
+          <>
+            <rect x="14" y="14" width="44" height="44" rx="14" className="icon-surface" />
+            <circle cx="27" cy="27" r="5" className="icon-accent-soft-fill" />
+            <circle cx="39" cy="27" r="5" className="icon-accent-soft-fill" />
+            <circle cx="27" cy="39" r="5" className="icon-accent-soft-fill" />
+            <path d="M40 39h10" className="icon-accent-stroke" />
+            <path d="M40 44h10" className="icon-accent-stroke" />
+            <path d="M40 49h10" className="icon-accent-stroke" />
           </>
         ) : null}
         {kind === 'convert' ? (
@@ -311,6 +344,14 @@ function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
             <rect x="11" y="11" width="50" height="50" rx="17" className="icon-accent-soft-fill" />
             <rect x="19" y="19" width="34" height="34" rx="11" className="icon-surface-strong" />
             <rect x="25" y="25" width="22" height="22" rx="7" className="icon-surface" />
+          </>
+        ) : null}
+        {kind === 'background' ? (
+          <>
+            <rect x="12" y="12" width="48" height="48" rx="16" className="icon-surface" />
+            <path d="M24 46C24 37.1634 31.1634 30 40 30H48V46H24Z" className="icon-accent-soft-fill" />
+            <path d="M28 42L35 35L40 40L48 32" className="icon-accent-stroke" />
+            <path d="M22 22L50 50" className="icon-accent-stroke" />
           </>
         ) : null}
       </svg>
@@ -727,8 +768,12 @@ export default function App() {
         return <RotateFlipTool />;
       case '/social':
         return <SocialMediaFormatterTool />;
+      case '/blur':
+        return <ComingSoonPage toolName="Blur / Pixelate" onNavigate={navigateTo} />;
       case '/metadata':
         return <RemoveMetadataTool />;
+      case '/background-remover':
+        return <ComingSoonPage toolName="Background Remover" onNavigate={navigateTo} />;
       case '/border':
         return <ComingSoonPage toolName="Border Maker" onNavigate={navigateTo} />;
       default:
