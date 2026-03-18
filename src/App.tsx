@@ -316,7 +316,7 @@ function RouteIntro({
           <h1>{isHome ? 'Simple photo tools that stay on your device.' : activeLabel}</h1>
           <p className="hero-copy">
             {isHome
-              ? 'Pick the tool you need, make your edits in the browser, and save the result without uploading anything to our server.'
+              ? 'Use free online photo tools for watermarking, collages, and image conversion right in your browser, with no uploads to our server.'
               : 'Part of Simple Photo Tools: private photo tools that run right in your browser.'}
           </p>
         </div>

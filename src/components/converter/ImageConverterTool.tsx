@@ -330,6 +330,11 @@ export function ImageConverterTool() {
               Convert images between JPG, PNG, and WebP with a simple private workflow that stays
               on your device.
             </p>
+            <div className="hero-tags" aria-label="Image converter highlights">
+              <span className="hero-tag">JPG PNG WebP</span>
+              <span className="hero-tag">HEIC input</span>
+              <span className="hero-tag">Private in browser</span>
+            </div>
           </div>
         </div>
         <div className="hero-card">

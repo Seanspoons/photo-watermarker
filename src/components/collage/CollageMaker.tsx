@@ -1318,6 +1318,11 @@ export function CollageMaker() {
               Add your photos, arrange them right in the preview, and save a clean collage at
               high quality right in your browser.
             </p>
+            <div className="hero-tags" aria-label="Collage maker highlights">
+              <span className="hero-tag">Photo collage</span>
+              <span className="hero-tag">Drag to arrange</span>
+              <span className="hero-tag">Private in browser</span>
+            </div>
           </div>
         </div>
         <div className="hero-card">
