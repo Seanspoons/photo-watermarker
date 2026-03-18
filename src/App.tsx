@@ -22,6 +22,7 @@ type AppRoute =
   | '/rotate'
   | '/rotate-image-online'
   | '/social'
+  | '/format-image-for-social-media'
   | '/metadata'
   | '/remove-photo-metadata'
   | '/resize-image-online'
@@ -161,6 +162,7 @@ function normalizeRoute(pathname: string): AppRoute {
     cleanPath === '/rotate' ||
     cleanPath === '/rotate-image-online' ||
     cleanPath === '/social' ||
+    cleanPath === '/format-image-for-social-media' ||
     cleanPath === '/metadata' ||
     cleanPath === '/remove-photo-metadata' ||
     cleanPath === '/resize-image-online' ||
@@ -346,7 +348,7 @@ function RouteIntro({
                   ? 'Remove Metadata'
                   : route === '/rotate'
                     ? 'Rotate / Flip'
-                    : route === '/social'
+                    : route === '/social' || route === '/format-image-for-social-media'
                       ? 'Social Media Formatter'
         : 'Coming Soon';
 
@@ -650,6 +652,22 @@ export default function App() {
             bulletC="Private in browser"
             ctaLabel="Open Rotate / Flip"
             ctaPath="/rotate"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
+      case '/format-image-for-social-media':
+        return (
+          <LandingPage
+            eyebrow="Format Image for Social Media"
+            title="Format an image for social media without a full design editor."
+            copy="Pick a ready-made preset for Instagram, TikTok, LinkedIn, X, and more, then fit or fill the canvas and save the final image right in your browser."
+            bulletA="Social presets"
+            bulletB="Fit or fill"
+            bulletC="Private in browser"
+            ctaLabel="Open Social Media Formatter"
+            ctaPath="/social"
             secondaryLabel="Go Home"
             secondaryPath="/"
             onNavigate={navigateTo}

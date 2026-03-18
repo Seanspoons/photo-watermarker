@@ -75,6 +75,14 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     image: 'https://simplephototools.com/og-rotate.png',
     imageAlt: 'Rotate Flip tool preview card'
   },
+  '/social': {
+    title: 'Social Media Formatter | Format Images for Instagram, TikTok, LinkedIn, and X',
+    description:
+      'Format images for Instagram, TikTok, LinkedIn, X, and more with simple presets, fit or fill controls, padding, and private browser-based export.',
+    canonicalPath: '/social',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Social Media Formatter tool preview card'
+  },
   '/metadata': {
     title: 'Remove Metadata | Strip Hidden Photo Details in Your Browser',
     description:
@@ -114,6 +122,14 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     canonicalPath: '/rotate-image-online',
     image: 'https://simplephototools.com/og-rotate.png',
     imageAlt: 'Rotate image online landing page preview'
+  },
+  '/format-image-for-social-media': {
+    title: 'Format Image for Social Media | Free Browser-Based Social Media Formatter',
+    description:
+      'Format an image for social media in your browser with presets for Instagram, TikTok, LinkedIn, X, and more, with fit or fill controls and private export.',
+    canonicalPath: '/format-image-for-social-media',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Format image for social media landing page preview'
   },
   '/convert-image-online': {
     title: 'Convert Image Online | Free Browser-Based Image Converter',

@@ -12,6 +12,7 @@ Current tools:
 - Image Compressor
 - Crop Tool
 - Rotate / Flip
+- Social Media Formatter
 - Remove Metadata
 
 ## What it does
@@ -57,6 +58,12 @@ Current tools:
 - Reset back to the original orientation any time
 - Export the final result locally in the browser
 
+### Social Media Formatter
+- Pick ready-made presets for Instagram, TikTok, YouTube, LinkedIn, and X
+- Choose whether the image should fit inside the canvas or fill it edge to edge
+- Add background color and padding when you need extra space around the image
+- Export the final social-ready image locally in the browser
+
 ### Remove Metadata
 - Review grouped metadata like file details, camera info, dates, and location when available
 - Create a cleaned copy that does not preserve the original metadata block
@@ -75,6 +82,7 @@ This project started as a watermarking app and is being expanded into a broader 
 - `/compress`
 - `/crop`
 - `/rotate`
+- `/social`
 - `/metadata`
 
 Additional tools will be added over time.
