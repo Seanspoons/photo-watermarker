@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CollageMaker } from './components/collage/CollageMaker';
+import { ImageCompressorTool } from './components/compressor/ImageCompressorTool';
 import { ImageConverterTool } from './components/converter/ImageConverterTool';
 import { PhotoResizerTool } from './components/resizer/PhotoResizerTool';
 import { applyRouteSeo } from './seo';
@@ -44,7 +45,8 @@ const LIVE_TOOL_LINKS: Array<{ path: AppRoute; label: string }> = [
   { path: '/watermarker', label: 'Watermarker' },
   { path: '/collage', label: 'Collage Maker' },
   { path: '/convert', label: 'Image Converter' },
-  { path: '/resize', label: 'Photo Resizer' }
+  { path: '/resize', label: 'Photo Resizer' },
+  { path: '/compress', label: 'Image Compressor' }
 ];
 
 const TOOL_CARDS: ToolCard[] = [
@@ -77,7 +79,7 @@ const TOOL_CARDS: ToolCard[] = [
     name: 'Image Compressor',
     description: 'Make image files smaller without extra hassle.',
     blurb: 'Helpful when photos are too large to send or upload.',
-    status: 'soon',
+    status: 'live',
     icon: 'compress'
   },
   {
@@ -313,6 +315,8 @@ function RouteIntro({
           ? 'Image Converter'
           : route === '/resize'
             ? 'Photo Resizer'
+            : route === '/compress'
+              ? 'Image Compressor'
         : 'Coming Soon';
 
   return (
@@ -521,7 +525,7 @@ export default function App() {
       case '/resize':
         return <PhotoResizerTool />;
       case '/compress':
-        return <ComingSoonPage toolName="Image Compressor" onNavigate={navigateTo} />;
+        return <ImageCompressorTool />;
       case '/convert':
         return <ImageConverterTool />;
       case '/convert-heic-to-jpg':
