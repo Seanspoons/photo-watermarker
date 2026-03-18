@@ -5,10 +5,16 @@ const SUPPORTED_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/avif',
+  'image/svg+xml',
   'image/heic',
   'image/heif',
   ''
 ]);
+
+const SUPPORTED_EXTENSIONS = /\.(jpe?g|png|webp|gif|bmp|avif|svg|heic|heif)$/i;
 
 function loadHtmlImage(objectUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -20,8 +26,8 @@ function loadHtmlImage(objectUrl: string): Promise<HTMLImageElement> {
 }
 
 export async function loadImageAsset(file: File): Promise<ImageAsset> {
-  if (!SUPPORTED_MIME_TYPES.has(file.type) && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) {
-    throw new Error('Please choose a JPEG, PNG, WebP, HEIC, or HEIF image.');
+  if (!SUPPORTED_MIME_TYPES.has(file.type) && !SUPPORTED_EXTENSIONS.test(file.name)) {
+    throw new Error('Please choose a JPEG, PNG, WebP, GIF, BMP, AVIF, SVG, HEIC, or HEIF image.');
   }
 
   const convertedFile = isHeicFile(file) ? await convertHeicToJpeg(file) : file;

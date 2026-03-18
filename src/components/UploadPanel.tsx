@@ -58,7 +58,7 @@ export function UploadPanel({ onFileSelect, disabled = false, fileName }: Upload
         />
         <span className="upload-title">Choose Photo</span>
         <span className="upload-copy">
-          Pick a JPEG, PNG, WebP, HEIC, or HEIF image. You can also drag and drop on desktop.
+          Pick a JPEG, PNG, WebP, GIF, BMP, AVIF, SVG, HEIC, or HEIF image. You can also drag and drop on desktop.
         </span>
       </label>
     </section>

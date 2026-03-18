@@ -29,7 +29,7 @@ Planned next tools:
 
 ### Image Converter
 - Convert images between JPEG, PNG, and WebP
-- Open JPEG, PNG, WebP, HEIC, and HEIF files locally
+- Open JPEG, PNG, WebP, GIF, BMP, AVIF, SVG, HEIC, and HEIF files locally
 - Adjust quality for JPEG and WebP exports
 - Fill transparent areas with a chosen background color when saving to JPEG
 

@@ -67,6 +67,22 @@ function inputFormatLabel(asset: ImageAsset | null): string {
     return 'HEIC / HEIF';
   }
 
+  if (/\.gif$/i.test(asset.name) || asset.mimeType === 'image/gif') {
+    return 'GIF';
+  }
+
+  if (/\.bmp$/i.test(asset.name) || asset.mimeType === 'image/bmp') {
+    return 'BMP';
+  }
+
+  if (/\.avif$/i.test(asset.name) || asset.mimeType === 'image/avif') {
+    return 'AVIF';
+  }
+
+  if (/\.svg$/i.test(asset.name) || asset.mimeType === 'image/svg+xml') {
+    return 'SVG';
+  }
+
   if (/\.png$/i.test(asset.name) || asset.mimeType === 'image/png') {
     return 'PNG';
   }
@@ -324,7 +340,7 @@ export function ImageConverterTool() {
               i
             </span>
             <p className="helper-text">
-              Convert JPEG, PNG, WebP, HEIC, and HEIF images locally with no uploads.
+              Convert JPEG, PNG, WebP, GIF, BMP, AVIF, SVG, HEIC, and HEIF images locally with no uploads.
             </p>
           </div>
         </div>
