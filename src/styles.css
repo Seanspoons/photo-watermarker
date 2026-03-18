@@ -625,6 +625,10 @@ select:disabled {
   width: 100%;
 }
 
+.crop-preview-shell + .preview-footer {
+  margin-top: 14px;
+}
+
 .crop-selection {
   position: absolute;
   border: 2px solid rgba(255, 252, 246, 0.95);
