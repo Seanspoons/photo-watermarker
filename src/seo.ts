@@ -64,7 +64,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Crop images in your browser with a simple drag-and-resize crop box, aspect ratio presets, and private client-side export.',
     canonicalPath: '/crop',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-crop.png',
     imageAlt: 'Crop Tool preview card'
   },
   '/resize-image-online': {
@@ -88,7 +88,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Crop an image online in your browser with a drag-and-resize crop box, simple aspect ratio presets, and private export.',
     canonicalPath: '/crop-image-online',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-crop.png',
     imageAlt: 'Crop image online landing page preview'
   },
   '/convert-image-online': {
