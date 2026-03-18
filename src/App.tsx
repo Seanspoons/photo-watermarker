@@ -12,7 +12,8 @@ type AppRoute =
   | '/convert'
   | '/crop'
   | '/rotate'
-  | '/social';
+  | '/social'
+  | '/metadata';
 
 interface ToolCard {
   path: AppRoute;
@@ -29,7 +30,8 @@ interface ToolCard {
     | 'convert'
     | 'crop'
     | 'rotate'
-    | 'social';
+    | 'social'
+    | 'metadata';
 }
 
 const TOOL_CARDS: ToolCard[] = [
@@ -98,6 +100,14 @@ const TOOL_CARDS: ToolCard[] = [
     icon: 'social'
   },
   {
+    path: '/metadata',
+    name: 'Metadata Remover',
+    description: 'Remove photo details before you share or save.',
+    blurb: 'Helpful when you want a cleaner, more private file.',
+    status: 'soon',
+    icon: 'metadata'
+  },
+  {
     path: '/border',
     name: 'Border Maker',
     description: 'Add padding or a simple border around a photo.',
@@ -120,7 +130,8 @@ function normalizeRoute(pathname: string): AppRoute {
     cleanPath === '/convert' ||
     cleanPath === '/crop' ||
     cleanPath === '/rotate' ||
-    cleanPath === '/social'
+    cleanPath === '/social' ||
+    cleanPath === '/metadata'
   ) {
     return cleanPath;
   }
@@ -243,6 +254,16 @@ function ToolIcon({ kind }: { kind: ToolCard['icon'] }) {
             />
             <path d="M32 34L40 28" className="icon-accent-stroke" />
             <path d="M32 42L36 44" className="icon-accent-stroke" />
+          </>
+        ) : null}
+        {kind === 'metadata' ? (
+          <>
+            <path
+              d="M40 15H32C25.9249 15 21 19.9249 21 26V46C21 52.0751 25.9249 57 32 57H40C46.0751 57 51 52.0751 51 46V26C51 19.9249 46.0751 15 40 15Z"
+              className="icon-surface"
+            />
+            <path d="M43 29L29 43" className="icon-accent-stroke" />
+            <path d="M29 29L43 43" className="icon-accent-stroke" />
           </>
         ) : null}
         {kind === 'border' ? (
@@ -411,6 +432,8 @@ export default function App() {
         return <ComingSoonPage toolName="Rotate / Flip" onNavigate={navigateTo} />;
       case '/social':
         return <ComingSoonPage toolName="Social Media Formatter" onNavigate={navigateTo} />;
+      case '/metadata':
+        return <ComingSoonPage toolName="Metadata Remover" onNavigate={navigateTo} />;
       case '/border':
         return <ComingSoonPage toolName="Border Maker" onNavigate={navigateTo} />;
       default:
