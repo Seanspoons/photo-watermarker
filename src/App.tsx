@@ -15,7 +15,10 @@ type AppRoute =
   | '/crop'
   | '/rotate'
   | '/social'
-  | '/metadata';
+  | '/metadata'
+  | '/convert-heic-to-jpg'
+  | '/add-watermark-to-photo'
+  | '/make-photo-collage-online';
 
 interface ToolCard {
   path: AppRoute;
@@ -139,7 +142,10 @@ function normalizeRoute(pathname: string): AppRoute {
     cleanPath === '/crop' ||
     cleanPath === '/rotate' ||
     cleanPath === '/social' ||
-    cleanPath === '/metadata'
+    cleanPath === '/metadata' ||
+    cleanPath === '/convert-heic-to-jpg' ||
+    cleanPath === '/add-watermark-to-photo' ||
+    cleanPath === '/make-photo-collage-online'
   ) {
     return cleanPath;
   }
@@ -423,6 +429,61 @@ function ComingSoonPage({
   );
 }
 
+function LandingPage({
+  eyebrow,
+  title,
+  copy,
+  bulletA,
+  bulletB,
+  bulletC,
+  ctaLabel,
+  ctaPath,
+  secondaryLabel,
+  secondaryPath,
+  onNavigate
+}: {
+  eyebrow: string;
+  title: string;
+  copy: string;
+  bulletA: string;
+  bulletB: string;
+  bulletC: string;
+  ctaLabel: string;
+  ctaPath: AppRoute;
+  secondaryLabel: string;
+  secondaryPath: AppRoute;
+  onNavigate: (path: AppRoute) => void;
+}) {
+  return (
+    <section className="hero">
+      <div className="hero-copy-block">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+          <p className="hero-copy">{copy}</p>
+          <div className="hero-tags" aria-label="Highlights">
+            <span className="hero-tag">{bulletA}</span>
+            <span className="hero-tag">{bulletB}</span>
+            <span className="hero-tag">{bulletC}</span>
+          </div>
+        </div>
+      </div>
+      <div className="hero-card">
+        <p className="hero-stat-label">Start here</p>
+        <p className="hero-stat">Use the matching tool right in your browser.</p>
+        <div className="coming-soon-actions">
+          <button type="button" className="primary-button" onClick={() => onNavigate(ctaPath)}>
+            {ctaLabel}
+          </button>
+          <button type="button" className="secondary-button" onClick={() => onNavigate(secondaryPath)}>
+            {secondaryLabel}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function App() {
   const logoUrl = `${import.meta.env.BASE_URL}icon.svg`;
   const [route, setRoute] = useState<AppRoute>(() => resolveRouteFromLocation(window.location));
@@ -459,6 +520,54 @@ export default function App() {
         return <ComingSoonPage toolName="Image Compressor" onNavigate={navigateTo} />;
       case '/convert':
         return <ImageConverterTool />;
+      case '/convert-heic-to-jpg':
+        return (
+          <LandingPage
+            eyebrow="Convert HEIC to JPG"
+            title="Convert HEIC photos to JPG without uploading them."
+            copy="Open HEIC or HEIF images, switch the output to JPEG, and save a new browser-based copy in just a few taps."
+            bulletA="HEIC and HEIF input"
+            bulletB="JPG output"
+            bulletC="Private in browser"
+            ctaLabel="Open Image Converter"
+            ctaPath="/convert"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
+      case '/add-watermark-to-photo':
+        return (
+          <LandingPage
+            eyebrow="Add Watermark to Photo"
+            title="Add a text or logo watermark to a photo online."
+            copy="Use the built-in watermarker to add text, logo, or proof-style marks right in your browser with no uploads to our server."
+            bulletA="Text or logo"
+            bulletB="Proof pattern"
+            bulletC="Private in browser"
+            ctaLabel="Open Watermarker"
+            ctaPath="/watermarker"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
+      case '/make-photo-collage-online':
+        return (
+          <LandingPage
+            eyebrow="Make Photo Collage Online"
+            title="Make a photo collage online without a cluttered editor."
+            copy="Upload your photos, arrange them directly in the preview, and export a clean collage right in your browser."
+            bulletA="Drag to arrange"
+            bulletB="Resize tiles"
+            bulletC="Private in browser"
+            ctaLabel="Open Collage Maker"
+            ctaPath="/collage"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
       case '/crop':
         return <ComingSoonPage toolName="Crop Tool" onNavigate={navigateTo} />;
       case '/rotate':

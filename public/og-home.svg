@@ -1,0 +1,17 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="36" fill="#F3F1EC"/>
+  <rect x="60" y="60" width="1080" height="510" rx="32" fill="#FCFBF8" stroke="#D9DDD5" stroke-width="2"/>
+  <rect x="92" y="92" width="84" height="84" rx="22" fill="white" stroke="#D9DDD5" stroke-width="2"/>
+  <rect x="112" y="112" width="44" height="44" rx="14" fill="#D9A24D"/>
+  <path d="M440 226H144" stroke="#1F3B2D" stroke-width="3" stroke-linecap="round"/>
+  <path d="M440 250H144" stroke="#1F3B2D" stroke-width="3" stroke-linecap="round"/>
+  <text x="144" y="344" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="68" font-weight="700">Simple Photo Tools</text>
+  <text x="144" y="406" fill="#5D685F" font-family="Roboto, Arial, sans-serif" font-size="30">Free browser-based photo tools for watermarking, collages,</text>
+  <text x="144" y="446" fill="#5D685F" font-family="Roboto, Arial, sans-serif" font-size="30">and image conversion, with no uploads to a server.</text>
+  <rect x="144" y="484" width="188" height="48" rx="24" fill="#FAF8F3" stroke="#D9DDD5"/>
+  <text x="176" y="515" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="24" font-weight="600">Watermarker</text>
+  <rect x="352" y="484" width="162" height="48" rx="24" fill="#FAF8F3" stroke="#D9DDD5"/>
+  <text x="388" y="515" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="24" font-weight="600">Collage</text>
+  <rect x="534" y="484" width="186" height="48" rx="24" fill="#FAF8F3" stroke="#D9DDD5"/>
+  <text x="568" y="515" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="24" font-weight="600">Converter</text>
+</svg>

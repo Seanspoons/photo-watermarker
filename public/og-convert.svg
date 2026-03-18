@@ -1,0 +1,16 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="36" fill="#F3F1EC"/>
+  <rect x="60" y="60" width="1080" height="510" rx="32" fill="#FCFBF8" stroke="#D9DDD5" stroke-width="2"/>
+  <path d="M808 146H894L920 172V294H808V146Z" fill="#FFFFFF" stroke="#D9DDD5" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M886 146V178H920" stroke="#D9A24D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M928 332H1014L1040 358V480H928V332Z" fill="#FAF8F3" stroke="#D9DDD5" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M1006 332V364H1040" stroke="#D9A24D" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M930 170C963 174 992 193 1008 224" stroke="#1F3B2D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M986 210L1012 226L981 228" stroke="#1F3B2D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M920 454C887 450 858 431 842 400" stroke="#1F3B2D" stroke-width="8" stroke-linecap="round"/>
+  <path d="M864 414L838 398L869 396" stroke="#1F3B2D" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="144" y="230" fill="#5D685F" font-family="Roboto, Arial, sans-serif" font-size="26" font-weight="600">Image Converter</text>
+  <text x="144" y="318" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="68" font-weight="700">Convert JPG, PNG, and</text>
+  <text x="144" y="390" fill="#1F3B2D" font-family="Roboto, Arial, sans-serif" font-size="68" font-weight="700">WebP in your browser</text>
+  <text x="144" y="450" fill="#5D685F" font-family="Roboto, Arial, sans-serif" font-size="30">Open HEIC and other common image types locally.</text>
+</svg>
