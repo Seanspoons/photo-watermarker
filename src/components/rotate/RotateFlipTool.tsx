@@ -405,42 +405,42 @@ export function RotateFlipTool() {
                 <h2>Adjust orientation</h2>
               </div>
             </div>
-            <div className="format-grid">
+            <div className="rotate-action-grid">
               <button
                 type="button"
-                className="format-card"
+                className="rotate-action-button"
                 onClick={rotateLeft}
                 disabled={!imageAsset || isBusy}
               >
-                <span className="format-card-title">Rotate Left</span>
-                <span className="format-card-copy">Turn the image 90° counterclockwise.</span>
+                <span className="rotate-action-label">Rotate Left</span>
+                <span className="rotate-action-copy">Turn the image 90° counterclockwise.</span>
               </button>
               <button
                 type="button"
-                className="format-card"
+                className="rotate-action-button"
                 onClick={rotateRight}
                 disabled={!imageAsset || isBusy}
               >
-                <span className="format-card-title">Rotate Right</span>
-                <span className="format-card-copy">Turn the image 90° clockwise.</span>
+                <span className="rotate-action-label">Rotate Right</span>
+                <span className="rotate-action-copy">Turn the image 90° clockwise.</span>
               </button>
               <button
                 type="button"
-                className={`format-card ${transform.flipX ? 'is-active' : ''}`}
+                className={`rotate-action-button ${transform.flipX ? 'is-active' : ''}`}
                 onClick={toggleFlipX}
                 disabled={!imageAsset || isBusy}
               >
-                <span className="format-card-title">Flip Horizontal</span>
-                <span className="format-card-copy">Mirror the image left to right.</span>
+                <span className="rotate-action-label">Flip Horizontal</span>
+                <span className="rotate-action-copy">Mirror the image left to right.</span>
               </button>
               <button
                 type="button"
-                className={`format-card ${transform.flipY ? 'is-active' : ''}`}
+                className={`rotate-action-button ${transform.flipY ? 'is-active' : ''}`}
                 onClick={toggleFlipY}
                 disabled={!imageAsset || isBusy}
               >
-                <span className="format-card-title">Flip Vertical</span>
-                <span className="format-card-copy">Mirror the image top to bottom.</span>
+                <span className="rotate-action-label">Flip Vertical</span>
+                <span className="rotate-action-copy">Mirror the image top to bottom.</span>
               </button>
             </div>
             <div className="export-actions export-actions-tight">

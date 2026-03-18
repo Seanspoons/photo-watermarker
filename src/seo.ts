@@ -72,7 +72,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Rotate or flip images in your browser with simple 90° controls, live preview, and private client-side export.',
     canonicalPath: '/rotate',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-rotate.png',
     imageAlt: 'Rotate Flip tool preview card'
   },
   '/metadata': {
@@ -112,7 +112,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Rotate an image online in your browser with simple 90° controls, horizontal or vertical flip options, and private export.',
     canonicalPath: '/rotate-image-online',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-rotate.png',
     imageAlt: 'Rotate image online landing page preview'
   },
   '/convert-image-online': {
