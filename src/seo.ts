@@ -12,49 +12,49 @@ const DEFAULT_DESCRIPTION =
 
 export const ROUTE_SEO: Record<string, RouteSeo> = {
   '/': {
-    title: 'Simple Photo Tools | Free Browser-Based Photo Tools',
+    title: 'Simple Photo Tools | Free Browser-Based Photo Editing and Utility Tools',
     description:
-      'Free browser-based photo tools for watermarking, collages, and image conversion, with no uploads, no accounts, and no backend.',
+      'Free browser-based photo tools for watermarking, collages, resizing, compression, and image conversion, with no uploads, no accounts, and no backend.',
     canonicalPath: '/',
     image: 'https://simplephototools.com/og-home.png',
     imageAlt: 'Simple Photo Tools homepage preview'
   },
   '/watermarker': {
-    title: 'Photo Watermarker | Add Text, Logo, or Proof Watermarks',
+    title: 'Photo Watermarker | Add Text, Logo, or Proof Watermarks in Your Browser',
     description:
-      'Add text, logo, or proof-style watermarks to photos right in your browser. Private, simple, and fully client-side.',
+      'Add text, logo, or proof-style watermarks to photos right in your browser with private client-side editing and simple export controls.',
     canonicalPath: '/watermarker',
     image: 'https://simplephototools.com/og-watermarker.png',
     imageAlt: 'Photo Watermarker preview card'
   },
   '/collage': {
-    title: 'Collage Maker | Create Photo Collages in Your Browser',
+    title: 'Collage Maker | Create Clean Photo Collages in Your Browser',
     description:
-      'Make clean photo collages in your browser with drag-to-arrange tiles, resize controls, and private client-side export.',
+      'Make clean photo collages in your browser with drag-to-arrange tiles, resize controls, and private client-side export that stays on your device.',
     canonicalPath: '/collage',
     image: 'https://simplephototools.com/og-collage.png',
     imageAlt: 'Collage Maker preview card'
   },
   '/convert': {
-    title: 'Image Converter | Convert JPG, PNG, and WebP Online',
+    title: 'Image Converter | Convert JPG, PNG, and WebP Images in Your Browser',
     description:
-      'Convert images between JPG, PNG, and WebP in your browser. Open HEIC, HEIF, GIF, BMP, AVIF, and SVG files locally with no uploads.',
+      'Convert images between JPG, PNG, and WebP in your browser, and open HEIC, HEIF, GIF, BMP, AVIF, and SVG files locally with no uploads.',
     canonicalPath: '/convert',
     image: 'https://simplephototools.com/og-convert.png',
     imageAlt: 'Image Converter preview card'
   },
   '/resize': {
-    title: 'Photo Resizer | Resize Images in Your Browser',
+    title: 'Photo Resizer | Resize Images for Social Posts, Websites, and Email',
     description:
-      'Resize images for websites, social posts, and email right in your browser with width, height, and aspect ratio controls.',
+      'Resize images for social posts, websites, and email right in your browser with width, height, and aspect ratio controls that stay private on your device.',
     canonicalPath: '/resize',
     image: 'https://simplephototools.com/og-resizer.png',
     imageAlt: 'Photo Resizer tool preview card'
   },
   '/compress': {
-    title: 'Image Compressor | Make Image Files Smaller Online',
+    title: 'Image Compressor | Make JPEG, PNG, and WebP Files Smaller in Your Browser',
     description:
-      'Make image files smaller in your browser with simple quality controls for JPEG, PNG, and WebP, with no uploads or account needed.',
+      'Make JPEG, PNG, and WebP image files smaller in your browser with simple quality controls, private processing, and no account required.',
     canonicalPath: '/compress',
     image: 'https://simplephototools.com/og-compressor.png',
     imageAlt: 'Image Compressor tool preview card'
