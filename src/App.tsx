@@ -4,6 +4,7 @@ import { ImageCompressorTool } from './components/compressor/ImageCompressorTool
 import { ImageConverterTool } from './components/converter/ImageConverterTool';
 import { CropTool } from './components/crop/CropTool';
 import { RemoveMetadataTool } from './components/metadata/RemoveMetadataTool';
+import { RotateFlipTool } from './components/rotate/RotateFlipTool';
 import { PhotoResizerTool } from './components/resizer/PhotoResizerTool';
 import { applyRouteSeo } from './seo';
 import { WatermarkTool } from './components/watermark/WatermarkTool';
@@ -55,7 +56,8 @@ const LIVE_TOOL_LINKS: Array<{ path: AppRoute; label: string }> = [
   { path: '/resize', label: 'Photo Resizer' },
   { path: '/compress', label: 'Image Compressor' },
   { path: '/crop', label: 'Crop Tool' },
-  { path: '/metadata', label: 'Remove Metadata' }
+  { path: '/metadata', label: 'Remove Metadata' },
+  { path: '/rotate', label: 'Rotate / Flip' }
 ];
 
 const TOOL_CARDS: ToolCard[] = [
@@ -112,7 +114,7 @@ const TOOL_CARDS: ToolCard[] = [
     name: 'Rotate / Flip',
     description: 'Rotate or flip images before saving.',
     blurb: 'Handy for quick fixes before you export.',
-    status: 'soon',
+    status: 'live',
     icon: 'rotate'
   },
   {
@@ -338,6 +340,8 @@ function RouteIntro({
                 ? 'Crop Tool'
                 : route === '/metadata' || route === '/remove-photo-metadata'
                   ? 'Remove Metadata'
+                  : route === '/rotate'
+                    ? 'Rotate / Flip'
         : 'Coming Soon';
 
   return (
@@ -680,7 +684,7 @@ export default function App() {
       case '/crop':
         return <CropTool />;
       case '/rotate':
-        return <ComingSoonPage toolName="Rotate / Flip" onNavigate={navigateTo} />;
+        return <RotateFlipTool />;
       case '/social':
         return <ComingSoonPage toolName="Social Media Formatter" onNavigate={navigateTo} />;
       case '/metadata':
