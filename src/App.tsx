@@ -21,6 +21,8 @@ type AppRoute =
   | '/metadata'
   | '/resize-image-online'
   | '/compress-image-online'
+  | '/crop-image-online'
+  | '/convert-image-online'
   | '/convert-heic-to-jpg'
   | '/add-watermark-to-photo'
   | '/make-photo-collage-online';
@@ -153,6 +155,8 @@ function normalizeRoute(pathname: string): AppRoute {
     cleanPath === '/metadata' ||
     cleanPath === '/resize-image-online' ||
     cleanPath === '/compress-image-online' ||
+    cleanPath === '/crop-image-online' ||
+    cleanPath === '/convert-image-online' ||
     cleanPath === '/convert-heic-to-jpg' ||
     cleanPath === '/add-watermark-to-photo' ||
     cleanPath === '/make-photo-collage-online'
@@ -318,14 +322,15 @@ function RouteIntro({
       : route === '/collage' || route === '/make-photo-collage-online'
         ? 'Collage Maker'
         : route === '/convert' || route === '/convert-heic-to-jpg'
+          || route === '/convert-image-online'
           ? 'Image Converter'
           : route === '/resize'
             || route === '/resize-image-online'
             ? 'Photo Resizer'
-          : route === '/compress'
+            : route === '/compress'
               || route === '/compress-image-online'
               ? 'Image Compressor'
-              : route === '/crop'
+              : route === '/crop' || route === '/crop-image-online'
                 ? 'Crop Tool'
         : 'Coming Soon';
 
@@ -554,6 +559,22 @@ export default function App() {
             onNavigate={navigateTo}
           />
         );
+      case '/convert-image-online':
+        return (
+          <LandingPage
+            eyebrow="Convert Image Online"
+            title="Convert an image online without sending it to a server."
+            copy="Open common image formats, switch to JPEG, PNG, or WebP, and save a converted file right in your browser."
+            bulletA="JPEG, PNG, and WebP"
+            bulletB="HEIC and HEIF input"
+            bulletC="Private in browser"
+            ctaLabel="Open Image Converter"
+            ctaPath="/convert"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
       case '/resize-image-online':
         return (
           <LandingPage
@@ -581,6 +602,22 @@ export default function App() {
             bulletC="Private in browser"
             ctaLabel="Open Image Compressor"
             ctaPath="/compress"
+            secondaryLabel="Go Home"
+            secondaryPath="/"
+            onNavigate={navigateTo}
+          />
+        );
+      case '/crop-image-online':
+        return (
+          <LandingPage
+            eyebrow="Crop Image Online"
+            title="Crop an image online and keep only the part you want."
+            copy="Drag the crop box, use a fixed ratio if you want one, and save the cropped result right in your browser."
+            bulletA="Drag to crop"
+            bulletB="Fixed ratios or free crop"
+            bulletC="Private in browser"
+            ctaLabel="Open Crop Tool"
+            ctaPath="/crop"
             secondaryLabel="Go Home"
             secondaryPath="/"
             onNavigate={navigateTo}
