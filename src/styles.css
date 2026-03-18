@@ -331,6 +331,14 @@ select:disabled {
   height: 100%;
 }
 
+.converter-layout-grid {
+  align-items: stretch;
+}
+
+.converter-layout-grid .left-column {
+  height: 100%;
+}
+
 .collage-layout-grid {
   align-items: stretch;
 }
@@ -1795,6 +1803,7 @@ select:disabled {
 }
 
 @media (min-width: 921px) {
+  .converter-layout-grid .preview-sticky-wrap,
   .watermark-layout-grid .preview-sticky-wrap {
     position: sticky;
     top: 20px;

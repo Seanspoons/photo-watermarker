@@ -13,7 +13,7 @@ export type WatermarkKind = 'text' | 'image';
 export type WatermarkLayout = 'single' | 'proof';
 export type WatermarkProofAngle = 'diagonal' | 'reverse-diagonal' | 'horizontal';
 
-export type ExportFormat = 'jpeg' | 'png';
+export type ExportFormat = 'jpeg' | 'png' | 'webp';
 export type CollageFitMode = 'cover' | 'contain';
 export type CollageShapePreset = 'square' | 'portrait' | 'story';
 export type CollageQualityPreset = 'standard' | 'hd' | 'uhd';

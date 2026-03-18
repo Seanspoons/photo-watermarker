@@ -1,11 +1,27 @@
 import { ExportFormat } from '../types';
 
 function extensionForFormat(format: ExportFormat): string {
-  return format === 'png' ? 'png' : 'jpg';
+  if (format === 'png') {
+    return 'png';
+  }
+
+  if (format === 'webp') {
+    return 'webp';
+  }
+
+  return 'jpg';
 }
 
 function mimeForFormat(format: ExportFormat): string {
-  return format === 'png' ? 'image/png' : 'image/jpeg';
+  if (format === 'png') {
+    return 'image/png';
+  }
+
+  if (format === 'webp') {
+    return 'image/webp';
+  }
+
+  return 'image/jpeg';
 }
 
 export function exportCanvasToBlob(
@@ -24,7 +40,7 @@ export function exportCanvasToBlob(
         resolve(blob);
       },
       mimeForFormat(format),
-      format === 'jpeg' ? quality : undefined
+      format === 'jpeg' || format === 'webp' ? quality : undefined
     );
   });
 }
