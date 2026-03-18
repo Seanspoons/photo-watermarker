@@ -72,7 +72,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Review and remove hidden photo metadata like location, camera, and capture details right in your browser with private client-side export.',
     canonicalPath: '/metadata',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-metadata.png',
     imageAlt: 'Remove Metadata tool preview card'
   },
   '/resize-image-online': {
@@ -128,7 +128,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     description:
       'Remove photo metadata in your browser, including location, camera, and capture details, and save a cleaned copy with no uploads.',
     canonicalPath: '/remove-photo-metadata',
-    image: 'https://simplephototools.com/og-home.png',
+    image: 'https://simplephototools.com/og-metadata.png',
     imageAlt: 'Remove photo metadata landing page preview'
   },
   '/make-photo-collage-online': {
