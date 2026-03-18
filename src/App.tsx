@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CollageMaker } from './components/collage/CollageMaker';
 import { ImageCompressorTool } from './components/compressor/ImageCompressorTool';
 import { ImageConverterTool } from './components/converter/ImageConverterTool';
+import { CropTool } from './components/crop/CropTool';
 import { PhotoResizerTool } from './components/resizer/PhotoResizerTool';
 import { applyRouteSeo } from './seo';
 import { WatermarkTool } from './components/watermark/WatermarkTool';
@@ -48,7 +49,8 @@ const LIVE_TOOL_LINKS: Array<{ path: AppRoute; label: string }> = [
   { path: '/collage', label: 'Collage Maker' },
   { path: '/convert', label: 'Image Converter' },
   { path: '/resize', label: 'Photo Resizer' },
-  { path: '/compress', label: 'Image Compressor' }
+  { path: '/compress', label: 'Image Compressor' },
+  { path: '/crop', label: 'Crop Tool' }
 ];
 
 const TOOL_CARDS: ToolCard[] = [
@@ -97,7 +99,7 @@ const TOOL_CARDS: ToolCard[] = [
     name: 'Crop Tool',
     description: 'Quickly crop images to the area you want.',
     blurb: 'Useful for cleaner framing and common aspect ratios.',
-    status: 'soon',
+    status: 'live',
     icon: 'crop'
   },
   {
@@ -320,9 +322,11 @@ function RouteIntro({
           : route === '/resize'
             || route === '/resize-image-online'
             ? 'Photo Resizer'
-            : route === '/compress'
+          : route === '/compress'
               || route === '/compress-image-online'
               ? 'Image Compressor'
+              : route === '/crop'
+                ? 'Crop Tool'
         : 'Coming Soon';
 
   return (
@@ -615,7 +619,7 @@ export default function App() {
           />
         );
       case '/crop':
-        return <ComingSoonPage toolName="Crop Tool" onNavigate={navigateTo} />;
+        return <CropTool />;
       case '/rotate':
         return <ComingSoonPage toolName="Rotate / Flip" onNavigate={navigateTo} />;
       case '/social':
