@@ -12,7 +12,7 @@ import { ExportFormat, ImageAsset } from '../../types';
 
 type CropConfirmAction = 'clear' | null;
 type CropPreset = 'free' | '1:1' | '4:5' | '16:9' | '3:2';
-type CropHandle = 'move' | 'nw' | 'ne' | 'sw' | 'se';
+type CropHandle = 'move' | 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se';
 
 interface CropRect {
   x: number;
@@ -253,6 +253,46 @@ function adjustCropForInteraction(
   }
 
   if (!ratio) {
+    if (interaction.mode === 'n') {
+      const y = clamp(startRect.y + deltaY, 0, startBottom - MIN_CROP_SIZE);
+      return {
+        x: startRect.x,
+        y: Math.round(y),
+        width: startRect.width,
+        height: Math.round(startBottom - y)
+      };
+    }
+
+    if (interaction.mode === 's') {
+      const bottom = clamp(startBottom + deltaY, startRect.y + MIN_CROP_SIZE, imageHeight);
+      return {
+        x: startRect.x,
+        y: startRect.y,
+        width: startRect.width,
+        height: Math.round(bottom - startRect.y)
+      };
+    }
+
+    if (interaction.mode === 'w') {
+      const x = clamp(startRect.x + deltaX, 0, startRight - MIN_CROP_SIZE);
+      return {
+        x: Math.round(x),
+        y: startRect.y,
+        width: Math.round(startRight - x),
+        height: startRect.height
+      };
+    }
+
+    if (interaction.mode === 'e') {
+      const right = clamp(startRight + deltaX, startRect.x + MIN_CROP_SIZE, imageWidth);
+      return {
+        x: startRect.x,
+        y: startRect.y,
+        width: Math.round(right - startRect.x),
+        height: startRect.height
+      };
+    }
+
     if (interaction.mode === 'nw') {
       const x = clamp(startRect.x + deltaX, 0, startRight - MIN_CROP_SIZE);
       const y = clamp(startRect.y + deltaY, 0, startBottom - MIN_CROP_SIZE);
@@ -326,6 +366,101 @@ function adjustCropForInteraction(
       height: Math.round(height)
     };
   };
+
+  const withAspectCentered = (
+    proposedPrimarySize: number,
+    primaryAxis: 'x' | 'y',
+    anchorEdge: 'start' | 'end'
+  ): CropRect => {
+    let width = primaryAxis === 'x' ? proposedPrimarySize : proposedPrimarySize * ratio;
+    let height = width / ratio;
+
+    if (primaryAxis === 'y') {
+      height = proposedPrimarySize;
+      width = height * ratio;
+    }
+
+    width = Math.max(MIN_CROP_SIZE, width);
+    height = Math.max(MIN_CROP_SIZE, height);
+
+    let x =
+      primaryAxis === 'x'
+        ? anchorEdge === 'start'
+          ? startRect.x
+          : startRight - width
+        : startRect.x + startRect.width / 2 - width / 2;
+    let y =
+      primaryAxis === 'y'
+        ? anchorEdge === 'start'
+          ? startRect.y
+          : startBottom - height
+        : startRect.y + startRect.height / 2 - height / 2;
+
+    x = clamp(x, 0, imageWidth - width);
+    y = clamp(y, 0, imageHeight - height);
+
+    if (x < 0) {
+      x = 0;
+    }
+    if (y < 0) {
+      y = 0;
+    }
+    if (x + width > imageWidth) {
+      x = imageWidth - width;
+    }
+    if (y + height > imageHeight) {
+      y = imageHeight - height;
+    }
+
+    if (primaryAxis === 'x') {
+      if (anchorEdge === 'start') {
+        width = Math.min(width, imageWidth - startRect.x);
+        height = width / ratio;
+        y = clamp(startRect.y + startRect.height / 2 - height / 2, 0, imageHeight - height);
+      } else {
+        width = Math.min(width, startRight);
+        height = width / ratio;
+        x = startRight - width;
+        y = clamp(startRect.y + startRect.height / 2 - height / 2, 0, imageHeight - height);
+      }
+    } else if (anchorEdge === 'start') {
+      height = Math.min(height, imageHeight - startRect.y);
+      width = height * ratio;
+      x = clamp(startRect.x + startRect.width / 2 - width / 2, 0, imageWidth - width);
+    } else {
+      height = Math.min(height, startBottom);
+      width = height * ratio;
+      y = startBottom - height;
+      x = clamp(startRect.x + startRect.width / 2 - width / 2, 0, imageWidth - width);
+    }
+
+    return {
+      x: Math.round(x),
+      y: Math.round(y),
+      width: Math.round(width),
+      height: Math.round(height)
+    };
+  };
+
+  if (interaction.mode === 'n') {
+    const height = startBottom - clamp(startRect.y + deltaY, 0, startBottom - MIN_CROP_SIZE);
+    return withAspectCentered(height, 'y', 'end');
+  }
+
+  if (interaction.mode === 's') {
+    const height = clamp(startBottom + deltaY, startRect.y + MIN_CROP_SIZE, imageHeight) - startRect.y;
+    return withAspectCentered(height, 'y', 'start');
+  }
+
+  if (interaction.mode === 'w') {
+    const width = startRight - clamp(startRect.x + deltaX, 0, startRight - MIN_CROP_SIZE);
+    return withAspectCentered(width, 'x', 'end');
+  }
+
+  if (interaction.mode === 'e') {
+    const width = clamp(startRight + deltaX, startRect.x + MIN_CROP_SIZE, imageWidth) - startRect.x;
+    return withAspectCentered(width, 'x', 'start');
+  }
 
   if (interaction.mode === 'nw') {
     const widthFromX = startRight - clamp(startRect.x + deltaX, 0, startRight - MIN_CROP_SIZE);
@@ -683,6 +818,30 @@ export function CropTool() {
                         <span />
                         <span />
                       </div>
+                      <button
+                        type="button"
+                        className="crop-handle crop-handle-n"
+                        onPointerDown={(event) => beginInteraction(event, 'n')}
+                        aria-label="Resize crop from top edge"
+                      />
+                      <button
+                        type="button"
+                        className="crop-handle crop-handle-s"
+                        onPointerDown={(event) => beginInteraction(event, 's')}
+                        aria-label="Resize crop from bottom edge"
+                      />
+                      <button
+                        type="button"
+                        className="crop-handle crop-handle-w"
+                        onPointerDown={(event) => beginInteraction(event, 'w')}
+                        aria-label="Resize crop from left edge"
+                      />
+                      <button
+                        type="button"
+                        className="crop-handle crop-handle-e"
+                        onPointerDown={(event) => beginInteraction(event, 'e')}
+                        aria-label="Resize crop from right edge"
+                      />
                       <button
                         type="button"
                         className="crop-handle crop-handle-nw"
