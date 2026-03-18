@@ -8,6 +8,7 @@ import {
   triggerDownload
 } from '../../utils/exportImage';
 import { loadImageAsset } from '../../utils/imageLoader';
+import { clearCompressorHandoff, loadCompressorHandoff } from '../../utils/toolHandoff';
 import { ExportFormat, ImageAsset } from '../../types';
 
 type CompressorConfirmAction = 'clear' | null;
@@ -147,6 +148,53 @@ export function ImageCompressorTool() {
 
   useEffect(() => {
     setCanNativeShare('share' in navigator && 'canShare' in navigator);
+  }, []);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function hydrateHandoff() {
+      try {
+        const handoffFile = await loadCompressorHandoff();
+        if (!handoffFile) {
+          return;
+        }
+
+        await clearCompressorHandoff();
+        const nextAsset = await loadImageAsset(handoffFile);
+        if (isCancelled) {
+          if (nextAsset.objectUrl) {
+            URL.revokeObjectURL(nextAsset.objectUrl);
+          }
+          return;
+        }
+
+        setImageAsset((current) => {
+          if (current?.objectUrl) {
+            URL.revokeObjectURL(current.objectUrl);
+          }
+          return nextAsset;
+        });
+        setOutputFormat(defaultCompressionFormat(nextAsset));
+        setQuality(0.82);
+        setErrorMessage(null);
+        setStatusMessage('Loaded your resized image and it is ready to compress.');
+      } catch (error) {
+        if (!isCancelled) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : 'The resized image could not be loaded into compression.'
+          );
+        }
+      }
+    }
+
+    void hydrateHandoff();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   useEffect(() => {

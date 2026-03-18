@@ -43,6 +43,22 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
     image: 'https://simplephototools.com/og-convert.png',
     imageAlt: 'Image Converter preview card'
   },
+  '/resize': {
+    title: 'Photo Resizer | Resize Images in Your Browser',
+    description:
+      'Resize images for websites, social posts, and email right in your browser with width, height, and aspect ratio controls.',
+    canonicalPath: '/resize',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Photo Resizer tool preview card'
+  },
+  '/compress': {
+    title: 'Image Compressor | Make Image Files Smaller Online',
+    description:
+      'Make image files smaller in your browser with simple quality controls for JPEG and WebP, with no uploads or account needed.',
+    canonicalPath: '/compress',
+    image: 'https://simplephototools.com/og-home.png',
+    imageAlt: 'Image Compressor tool preview card'
+  },
   '/convert-heic-to-jpg': {
     title: 'Convert HEIC to JPG | Free Browser-Based Image Converter',
     description:

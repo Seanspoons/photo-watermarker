@@ -8,6 +8,7 @@ import {
   triggerDownload
 } from '../../utils/exportImage';
 import { loadImageAsset } from '../../utils/imageLoader';
+import { saveCompressorHandoff } from '../../utils/toolHandoff';
 import { ExportFormat, ImageAsset } from '../../types';
 
 type ResizerConfirmAction = 'clear' | null;
@@ -247,6 +248,42 @@ export function PhotoResizerTool() {
     }
   };
 
+  const handleSendToCompressor = async () => {
+    if (!imageAsset || !exportCanvasRef.current || !resizedDimensions) {
+      setErrorMessage('Choose an image and set a valid size before sending it to compression.');
+      return;
+    }
+
+    setIsBusy(true);
+    setErrorMessage(null);
+    setStatusMessage('Preparing resized image for compression...');
+
+    try {
+      renderResizedImage(
+        exportCanvasRef.current,
+        imageAsset.image,
+        resizedDimensions.width,
+        resizedDimensions.height
+      );
+
+      const blob = await exportCanvasToBlob(exportCanvasRef.current, outputFormat, 0.94);
+      const filename = createResizedFilename(imageAsset.name, outputFormat);
+      const file = new File([blob], filename, { type: blob.type });
+      await saveCompressorHandoff(file);
+      window.history.pushState({}, '', '/compress');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'The resized image could not be sent into compression.'
+      );
+      setStatusMessage(null);
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
   const handleChooseAnotherPhoto = () => {
     setConfirmAction(null);
     setImageAsset((current) => {
@@ -451,7 +488,8 @@ export function PhotoResizerTool() {
               <button
                 type="button"
                 className="ghost-button"
-                disabled
+                onClick={handleSendToCompressor}
+                disabled={!imageAsset || !resizedDimensions || isBusy}
               >
                 Compress this image
               </button>

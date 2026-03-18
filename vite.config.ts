@@ -15,6 +15,8 @@ export default defineConfig(() => {
           watermarker: resolve(__dirname, 'watermarker/index.html'),
           collage: resolve(__dirname, 'collage/index.html'),
           convert: resolve(__dirname, 'convert/index.html'),
+          resize: resolve(__dirname, 'resize/index.html'),
+          compress: resolve(__dirname, 'compress/index.html'),
           convertHeicToJpg: resolve(__dirname, 'convert-heic-to-jpg/index.html'),
           addWatermarkToPhoto: resolve(__dirname, 'add-watermark-to-photo/index.html'),
           makePhotoCollageOnline: resolve(__dirname, 'make-photo-collage-online/index.html')
